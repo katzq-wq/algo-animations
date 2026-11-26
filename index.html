@@ -199,7 +199,9 @@ svg text{font-family:"JetBrains Mono",monospace}
 @media (max-width:760px){
   #menuBtn{display:block}
   header h1 span{display:none}
-  nav{position:fixed;top:0;bottom:0;right:0;z-index:30;box-shadow:-10px 0 30px rgba(0,0,0,.2);display:none;padding-top:6px;width:min(290px,85vw)}
+  nav{position:fixed;top:0;bottom:0;right:0;z-index:30;box-shadow:-10px 0 30px rgba(0,0,0,.2);display:none;padding-top:58px;width:min(290px,85vw)}
+  #menuBtn{position:relative;z-index:40}
+  body.navopen #menuBtn{background:var(--ink)}
   nav.open{display:block}
   #navClose{display:flex}
   #backdrop.open{display:block}
@@ -483,7 +485,7 @@ function buildNav() {
     tb.innerHTML = `${esc(t.name)}<small>${list.length === 1 ? "הנפשה אחת" : list.length + " הנפשות"}</small>`; tb.onclick = () => go2(list[0].id); tiles.appendChild(tb);
   });
 }
-function go2(id) { openAlgo(id); $("nav").classList.remove("open"); $("backdrop").classList.remove("open"); try { history.replaceState(null, "", "#" + id); } catch (e) {} }
+function go2(id) { openAlgo(id); $("nav").classList.remove("open"); $("backdrop").classList.remove("open"); document.body.classList.remove("navopen"); try { history.replaceState(null, "", "#" + id); } catch (e) {} }
 function toggle(btn, box, on) { const v = on !== undefined ? on : box.hidden; box.hidden = !v; btn.setAttribute("aria-expanded", String(v)); }
 function openAlgo(id) {
   const a = ALGOS.find(x => x.id === id); if (!a) return;
@@ -627,7 +629,7 @@ function initUI() {
   $("scrub").oninput = e => { stop(); idx = +e.target.value; show(); };
   $("tInfo").onclick = () => toggle($("tInfo"), $("intro"));
   $("tInput").onclick = () => toggle($("tInput"), $("inputsBox"));
-  const setNav = on => { $("nav").classList.toggle("open", on); $("backdrop").classList.toggle("open", on); };
+  const setNav = on => { $("nav").classList.toggle("open", on); $("backdrop").classList.toggle("open", on); document.body.classList.toggle("navopen", on); };
   $("menuBtn").onclick = () => setNav(!$("nav").classList.contains("open"));
   $("backdrop").onclick = () => setNav(false);
   document.querySelector("#navClose button").onclick = () => setNav(false);
