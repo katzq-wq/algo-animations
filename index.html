@@ -1,0 +1,2158 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>הנפשות אלגוריתמים</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+/* VOICE: playful but exact, like a good visual-algorithms lab.
+   IDEA: VisuAlgo-style colour blocks — every state has its own bright colour.
+   PICTURE: the running algorithm, large, on a white board.
+   COLOUR and TYPE: orange = now, green = compared, cyan = finished, pink = changed; Rubik + JetBrains Mono.
+   LAYOUT: topic rail, title + search, board with orange caption and transport, green code plate. */
+:root{color-scheme:light;
+  --bg:#fff; --ink:#222; --muted:#777; --line:#e6e6e6; --soft:#f5f5f5;
+  --orange:#ff8a27; --orange-t:#ffe6d1; --green:#52bc69; --green-d:#2f8a46; --green-t:#dcf3e1;
+  --cyan:#2ebbd1; --cyan-t:#d4f1f6; --pink:#e64980; --pink-t:#fde0ea; --gray:#bbb; --idle:#eee;
+}
+*{box-sizing:border-box;min-width:0}
+html,body{margin:0;height:100%}
+body{font:16px/1.5 Rubik,Arial,sans-serif;background:var(--bg);color:var(--ink);display:flex;flex-direction:column;overflow-x:clip}
+button,input{font:inherit;color:inherit}
+header{flex-shrink:0;background:var(--orange);color:#fff;padding:10px 18px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+header h1{margin:0;font-size:19px;font-weight:700;white-space:nowrap}
+header h1 span{font-weight:400;opacity:.9}
+#menuBtn{display:none;background:rgba(255,255,255,.2);border:0;border-radius:6px;width:40px;height:40px;cursor:pointer;font-size:18px;color:#fff}
+.search{position:relative;flex:1 1 280px;max-width:520px;margin-inline-start:auto}
+.search input{width:100%;height:42px;border:0;border-radius:6px;padding:0 40px 0 14px;font-size:15.5px;color:var(--ink);background:#fff}
+.search input:focus{outline:3px solid rgba(255,255,255,.55)}
+.search .ic{position:absolute;right:12px;top:10px;color:var(--orange);font-size:17px;pointer-events:none}
+.results{position:absolute;top:48px;inset-inline:0;background:#fff;color:var(--ink);border-radius:8px;box-shadow:0 12px 36px rgba(0,0,0,.18);max-height:70vh;overflow-y:auto;z-index:20;padding:6px}
+.results:empty{display:none}
+.results .grp{font-size:12px;color:var(--muted);padding:8px 10px 2px}
+.results a{display:block;padding:8px 10px;border-radius:6px;color:inherit;text-decoration:none;cursor:pointer}
+.results a:hover,.results a.on{background:var(--orange-t)}
+.results a b{font-weight:600}
+.results a small{display:block;color:var(--muted);font-size:13px}
+.results .none{padding:12px;color:var(--muted);font-size:14px}
+.layout{flex:1;display:flex;min-height:0}
+nav{width:248px;flex-shrink:0;background:var(--soft);overflow-y:auto;padding:6px 0 28px}
+nav .topic{padding:12px 16px 3px;font-size:12.5px;color:var(--muted);font-weight:600;display:flex;gap:7px;align-items:center}
+nav .topic i{font-style:normal;background:var(--cyan);color:#fff;border-radius:4px;font:700 11px "JetBrains Mono",monospace;padding:1px 5px}
+nav button{display:block;width:100%;text-align:right;background:none;border:0;padding:6px 16px 6px 12px;font-size:14.5px;cursor:pointer;border-right:4px solid transparent}
+nav button:hover{background:#ececec}
+nav button.on{background:#fff;border-right-color:var(--orange);font-weight:600}
+main{flex:1;overflow-y:auto;padding:18px clamp(12px,2vw,28px) 36px}
+#welcome{max-width:760px;margin:5vh auto 0}
+#welcome h2{font-size:clamp(28px,3.4vw,40px);line-height:1.1;margin:0 0 10px}
+#welcome p{color:var(--muted);font-size:17px;margin:0 0 20px}
+.tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px}
+.tiles button{border:0;border-radius:8px;padding:14px;text-align:right;cursor:pointer;color:#fff;font-weight:600;font-size:15px;min-height:76px}
+.tiles button small{display:block;font-weight:400;opacity:.9;font-size:12.5px}
+.head{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;margin-bottom:12px}
+.head .t{flex:1 1 360px}
+.head h2{margin:0;font-size:clamp(23px,2.4vw,30px);line-height:1.15}
+.head .tag{color:var(--muted);font-size:15.5px;margin-top:3px}
+.badge{display:inline-block;font-size:12.5px;font-weight:600;border-radius:4px;padding:2px 8px;margin-top:6px}
+.badge.lec{background:var(--cyan-t);color:#127f91}
+.badge.ext{background:var(--pink-t);color:#b02a5b}
+.badge.own{background:var(--idle);color:var(--muted)}
+.tb{border:0;background:var(--idle);border-radius:6px;height:40px;padding:0 14px;cursor:pointer;font-size:14.5px;font-weight:500}
+.tb:hover{background:#e2e2e2}
+.tb[aria-expanded=true]{background:var(--ink);color:#fff}
+.drawer{background:var(--soft);border-radius:8px;padding:14px 18px;margin-bottom:12px;line-height:1.75;font-size:15.5px}
+.drawer b{color:var(--orange)}
+.inputs{display:flex;flex-wrap:wrap;gap:12px 16px;align-items:flex-end}
+.inputs label{display:flex;flex-direction:column;gap:5px;font-size:13px;color:var(--muted)}
+.inputs input,.inputs textarea{font:14.5px "JetBrains Mono",monospace;padding:9px 12px;border:2px solid var(--line);border-radius:6px;background:#fff;color:var(--ink);direction:ltr;text-align:left}
+.inputs input:focus,.inputs textarea:focus{outline:0;border-color:var(--orange)}
+.inputs textarea{min-width:220px;min-height:100px;resize:vertical;font-size:13.5px}
+.inputs .hint{font-size:12.5px;max-width:300px;line-height:1.5}
+.btn{height:42px;padding:0 18px;border-radius:6px;border:0;background:var(--orange);color:#fff;cursor:pointer;font-weight:600}
+.btn.ghost{background:var(--idle);color:var(--ink)}
+.err{color:var(--pink);font-size:14px;width:100%;font-weight:500}
+.err:empty{display:none}
+.knobs{display:flex;flex-wrap:wrap;gap:10px 22px;align-items:center;background:var(--soft);border-radius:6px;padding:10px 14px;margin-bottom:12px}
+.knobs:empty{display:none}
+.knob{display:flex;gap:8px;align-items:center;font-size:14px;color:var(--muted)}
+.seg{display:inline-flex;border-radius:5px;overflow:hidden}
+.seg button{border:0;background:#e6e6e6;padding:7px 13px;font-weight:600;font-size:14px;cursor:pointer}
+.seg button:hover{background:#dcdcdc}
+.seg button.on{background:var(--orange);color:#fff}
+.seg button small{font-weight:400;opacity:.8;font-size:11.5px;margin-inline-start:3px}
+.stage{display:grid;grid-template-columns:minmax(0,1fr) minmax(290px,370px);gap:14px;align-items:start}
+.board{border:2px solid var(--line);border-radius:6px;overflow:hidden;background:#fff}
+.viz{padding:16px 12px 6px;min-height:320px;display:flex;flex-direction:column;justify-content:center;overflow-x:auto}
+.viz svg{display:block;margin:0 auto;width:100%;height:auto}
+.legend{display:flex;flex-wrap:wrap;justify-content:center;gap:5px 14px;font-size:13px;color:var(--muted);padding:2px 12px 12px}
+.legend span{display:inline-flex;align-items:center;gap:5px}
+.legend i{width:14px;height:14px;border-radius:50%;display:inline-block}
+.legend i.e{width:20px;height:0;border-radius:0;border-top:4px solid}
+.legend i.e.dash{border-top-style:dashed}
+.caption{background:var(--orange);color:#fff;padding:11px 16px;font-size:16px;line-height:1.6;min-height:68px;display:flex;gap:10px;align-items:flex-start}
+.caption .n{flex:none;font:700 12px "JetBrains Mono",monospace;background:rgba(255,255,255,.25);border-radius:4px;padding:2px 6px;margin-top:3px}
+.caption code{background:rgba(255,255,255,.25);color:#fff}
+.transport{display:flex;align-items:center;gap:7px;padding:9px 12px;background:#fff;border-top:2px solid var(--line)}
+.ib{width:44px;height:42px;border-radius:5px;border:0;background:var(--idle);cursor:pointer;display:grid;place-items:center;flex:none}
+.ib svg{width:17px;height:17px;fill:currentColor}
+.ib:hover{background:#e2e2e2}
+.ib.play{background:var(--orange);color:#fff;width:52px}
+.ib:disabled{opacity:.35;cursor:default}
+.scrub{flex:1;accent-color:var(--green);direction:rtl;height:26px}
+.speed{display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--muted)}
+.speed input{width:70px;accent-color:var(--orange)}
+.side{display:flex;flex-direction:column;gap:10px}
+.code{background:var(--green);color:#fff;border-radius:6px;padding:12px 0;font:12.5px/1.7 "JetBrains Mono",Consolas,monospace;max-height:62vh;overflow:auto}
+.code-title{font:600 13px Rubik,sans-serif;padding:0 14px 8px;opacity:.9}
+#code{direction:ltr;text-align:left}
+#code div{display:flex;white-space:pre-wrap;padding-right:12px}
+#code .ln{flex:none;width:32px;text-align:right;padding-right:10px;opacity:.6;user-select:none}
+#code .tx{flex:1;padding-left:2.5ch;text-indent:-2.5ch}
+#code div.on{background:var(--green-d)}
+#code.he{direction:rtl;text-align:right;font-family:Rubik,sans-serif;font-size:14px}
+#code.he div{padding:0 0 0 12px}
+#code.he .ln{text-align:left;padding:0 0 0 10px;font-family:"JetBrains Mono",monospace;font-size:12px}
+#code.he .tx{padding:0 2ch 0 0;text-indent:-2ch}
+#code .ltr{font-family:"JetBrains Mono",monospace;font-size:12.5px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{background:var(--soft);border-radius:4px;padding:4px 10px;font-size:13px;display:inline-flex;gap:8px;align-items:baseline}
+.chip span{color:var(--muted)}
+.chip b{font:700 13px "JetBrains Mono",monospace;direction:ltr;unicode-bidi:isolate}
+code,.ltr{direction:ltr;unicode-bidi:isolate;font-family:"JetBrains Mono",monospace;font-size:.9em}
+code{background:var(--idle);padding:0 5px;border-radius:4px;white-space:nowrap}
+/* arrays */
+.arr{margin:4px 0 12px;text-align:center}
+.arr .lbl{font-size:13px;color:var(--muted);margin-bottom:2px}
+.arr .row{display:flex;direction:ltr;gap:4px;justify-content:center;flex-wrap:wrap}
+.cell{width:46px;text-align:center}
+.cell .ptr{height:22px;display:flex;align-items:flex-end;justify-content:center}
+.cell .ptr em{font:700 10.5px "JetBrains Mono",monospace;font-style:normal;background:var(--ink);color:#fff;border-radius:3px;padding:0 4px;white-space:nowrap}
+.box{height:46px;display:flex;align-items:center;justify-content:center;border-radius:4px;background:var(--idle);font:700 16px "JetBrains Mono",monospace;transition:background .3s,color .3s,opacity .3s,transform .3s}
+.cell .idx{font:11px "JetBrains Mono",monospace;color:var(--muted);margin-top:3px}
+.box.cur{background:var(--orange);color:#fff;transform:translateY(-3px)}
+.box.cmp,.box.cmpp{background:var(--green);color:#fff}
+.box.sel{background:var(--pink);color:#fff;transform:translateY(-3px)}
+.box.ok{background:var(--cyan);color:#fff}
+.box.vis{background:var(--cyan-t)}
+.box.dim{opacity:.25}
+.box.empty{background:#fff;border:2px dashed var(--line)}
+.cards{display:flex;flex-direction:column;gap:8px;max-width:440px;width:100%;margin:0 auto}
+.card{border-radius:5px;padding:10px 14px;background:var(--idle);display:flex;justify-content:space-between;gap:12px;direction:ltr;font-weight:500;transition:background .3s,color .3s}
+.card.cur{background:var(--orange);color:#fff}
+.card.ok{background:var(--cyan);color:#fff}
+.card code{background:none;padding:0;color:inherit}
+.listbox{display:flex;direction:ltr;gap:4px;flex-wrap:wrap;align-items:center;min-height:34px;justify-content:center}
+.listbox span{background:var(--cyan);color:#fff;border-radius:4px;padding:3px 11px;font:700 14px "JetBrains Mono",monospace}
+.listbox em{color:var(--muted);font-style:normal;font-size:13px}
+.sublabel{font-size:13px;color:var(--muted);text-align:center;margin-top:10px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:12px;direction:ltr}
+.two>div{direction:rtl}
+.two .t{font-size:13px;color:var(--muted);text-align:center;font-weight:500}
+.formula{direction:ltr;text-align:left;font:12.5px/1.85 "JetBrains Mono",monospace;background:var(--soft);border-radius:5px;padding:8px 12px;max-height:150px;overflow:auto;margin-top:6px}
+.formula .new{background:var(--orange-t);border-radius:3px}
+.formula .ok{color:var(--green-d)}
+.table{margin:10px auto 0;border-collapse:separate;border-spacing:3px;font:13.5px "JetBrains Mono",monospace;direction:ltr}
+.table td{padding:3px 10px;text-align:center}
+.table td.h{color:var(--muted);font-family:Rubik,sans-serif;font-size:12.5px;text-align:right}
+.table td.v{background:var(--idle);border-radius:4px;font-weight:700;transition:background .3s}
+.table td.v.cur{background:var(--orange);color:#fff}
+.table td.v.ok{background:var(--cyan);color:#fff}
+/* svg */
+svg{direction:ltr;overflow:visible}
+svg text{font-family:"JetBrains Mono",monospace}
+.nd{transition:transform .5s ease,opacity .3s}
+.eg .lb{transition:transform .5s ease}
+.nd circle,.nd rect{fill:var(--idle);stroke:#999;stroke-width:1.6;transition:cx .5s ease,cy .5s ease,x .5s ease,y .5s ease,fill .3s,stroke .3s,opacity .3s}
+.nd text{font-size:14px;font-weight:700;fill:var(--ink);text-anchor:middle;dominant-baseline:central;transition:x .5s ease,y .5s ease,fill .3s}
+.nd text.sub{font-size:12px;fill:var(--pink)}
+.nd.vis circle,.nd.vis rect{fill:var(--cyan-t);stroke:var(--cyan);stroke-width:2.2}
+.nd.cur circle,.nd.cur rect{fill:var(--orange);stroke:var(--orange)}
+.nd.done circle,.nd.done rect{fill:var(--cyan);stroke:var(--cyan)}
+.nd.sel circle,.nd.sel rect{fill:var(--pink);stroke:var(--pink)}
+.nd.cmp circle,.nd.cmp rect{fill:var(--green);stroke:var(--green)}
+.nd.cur text:not(.sub),.nd.done text:not(.sub),.nd.sel text:not(.sub),.nd.cmp text:not(.sub){fill:#fff}
+.nd.dim{opacity:.3}
+.nd.S circle{fill:var(--cyan);stroke:var(--cyan)}.nd.S text:not(.sub){fill:#fff}
+.nd.T circle{fill:var(--pink-t);stroke:var(--pink)}
+.eg path{stroke:var(--gray);stroke-width:2;fill:none;stroke-linecap:round;transition:d .5s ease,stroke .3s,stroke-width .3s,opacity .3s}
+.eg .lb rect{fill:#fff;stroke:#ddd;stroke-width:1;transition:x .5s,y .5s}
+.eg .lb text{font-size:11.5px;font-weight:700;fill:#555;text-anchor:middle;dominant-baseline:central;transition:x .5s,y .5s}
+.eg.tree path,.eg.flow path{stroke:var(--cyan);stroke-width:3.6}
+.eg.match path{stroke:var(--green);stroke-width:4.4}
+.eg.cand path{stroke:var(--green);stroke-width:2.4;stroke-dasharray:6 5}
+.eg.cur path,.eg.path path{stroke:var(--orange);stroke-width:4.2}
+.eg.cut path{stroke:var(--pink);stroke-width:3.4;stroke-dasharray:8 5}
+.eg.dim{opacity:.2}
+.eg.tree .lb text,.eg.flow .lb text{fill:#127f91}
+.eg.cur .lb rect,.eg.path .lb rect{fill:var(--orange);stroke:var(--orange)}.eg.cur .lb text,.eg.path .lb text{fill:#fff}
+.eg.match .lb text{fill:var(--green-d)}
+.fade{animation:fade .35s ease}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+@media (max-width:1100px){.stage{grid-template-columns:1fr}.code{max-height:none}}
+@media (max-width:760px){
+  #menuBtn{display:block}
+  header h1 span{display:none}
+  nav{position:fixed;top:0;bottom:0;right:0;z-index:30;box-shadow:-10px 0 30px rgba(0,0,0,.2);display:none;padding-top:14px}
+  nav.open{display:block}
+  .two{grid-template-columns:1fr}
+  .speed{display:none}
+  .cell{width:36px}.box{height:38px;font-size:14px}
+  .viz{min-height:240px}
+}
+</style>
+</head>
+<body>
+<header>
+  <button id="menuBtn" aria-label="תפריט">☰</button>
+  <h1>הנפשות <span>· יסודות האלגוריתמים והסיבוכיות</span></h1>
+  <div class="search">
+    <span class="ic">⌕</span>
+    <input id="q" type="search" placeholder="חפשו בחומר: למשל ״מסלול קצר״, ״ערימה״, ״רדוקציה״" autocomplete="off" aria-label="חיפוש בחומר הקורס">
+    <div class="results" id="results"></div>
+  </div>
+</header>
+<div class="layout">
+  <nav id="nav"></nav>
+  <main id="main">
+    <div id="welcome">
+      <h2>כל האלגוריתמים של הקורס, בתנועה</h2>
+      <p>בחרו אלגוריתם וראו אותו רץ צעד אחר צעד, על הדוגמה מההרצאה או על קלט משלכם. אפשר גם לחפש למעלה.</p>
+      <div class="tiles" id="tiles"></div>
+    </div>
+    <div id="algo" hidden>
+      <div class="head">
+        <div class="t"><h2 id="algoName"></h2><div class="tag" id="tag"></div><span class="badge" id="badge"></span></div>
+        <button class="tb" id="tInfo" aria-expanded="false">הסבר</button>
+        <button class="tb" id="tInput" aria-expanded="false">שינוי הקלט</button>
+      </div>
+      <div class="drawer" id="intro" hidden></div>
+      <div class="drawer" id="inputsBox" hidden><div class="inputs" id="inputs"></div></div>
+      <div class="knobs" id="knobs"></div>
+      <div class="stage">
+        <div class="board">
+          <div class="viz" id="viz"></div>
+          <div class="legend" id="legend"></div>
+          <div class="caption"><span class="n" id="count"></span><div id="msg"></div></div>
+          <div class="transport">
+            <button class="ib" id="bFirst" aria-label="להתחלה" title="להתחלה"><svg viewBox="0 0 24 24"><path d="M17.5 5H20v14h-2.5zM3 5v14l7-7zM10 5v14l7-7z"/></svg></button>
+            <button class="ib" id="bPrev" aria-label="צעד קודם" title="צעד קודם (→)"><svg viewBox="0 0 24 24"><path d="M5 5v14l11-7zM17 5h2.5v14H17z" opacity=".95"/></svg></button>
+            <button class="ib play" id="bPlay" aria-label="הפעלה" title="הפעלה / עצירה (רווח)"><svg viewBox="0 0 24 24" id="playIcon"><path d="M7 5v14l11-7z"/></svg></button>
+            <button class="ib" id="bNext" aria-label="צעד הבא" title="צעד הבא (←)"><svg viewBox="0 0 24 24"><path d="M19 5v14L8 12zM4.5 5H7v14H4.5z"/></svg></button>
+            <input type="range" class="scrub" id="scrub" min="0" max="0" value="0" aria-label="מיקום בהנפשה">
+            <label class="speed">מהירות<input type="range" id="speed" min="0" max="100" value="45"></label>
+          </div>
+        </div>
+        <div class="side">
+          <div class="code"><div class="code-title">פסאודו-קוד</div><div id="code"></div></div>
+          <div class="chips" id="vars"></div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+<script>
+"use strict";
+/* ================== helpers ================== */
+const INF = Infinity;
+const clone = o => JSON.parse(JSON.stringify(o, (k, v) => v === Infinity ? "__INF__" : v),
+                              (k, v) => v === "__INF__" ? Infinity : v);
+const fmt = v => v === Infinity ? "∞" : (v === null || v === undefined ? "–" : String(v));
+const c = s => `<code>${s}</code>`;
+const esc = s => String(s).replace(/[&<>"']/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch]));
+const NAME_RE = "[A-Za-z0-9_֐-׿']+";
+
+function parseNums(str, what) {
+  const parts = String(str).split(/[\s,;|]+/).filter(Boolean);
+  if (!parts.length) throw `צריך לכתוב ${what}.`;
+  return parts.map(p => { const v = Number(p); if (!Number.isFinite(v)) throw `"${esc(p)}" הוא לא מספר.`; return v; });
+}
+function parseInt1(str, what) { const v = Number(String(str).trim()); if (!Number.isInteger(v)) throw `${what} צריך להיות מספר שלם.`; return v; }
+function sortIds(ids) {
+  return ids.slice().sort((a, b) => {
+    const na = Number(a), nb = Number(b);
+    if (Number.isFinite(na) && Number.isFinite(nb)) return na - nb;
+    return String(a).localeCompare(String(b), "he");
+  });
+}
+function parseGraph(text, { weighted = false, directed = false } = {}) {
+  const items = String(text).split(/[\n;,]+/).map(s => s.trim()).filter(Boolean);
+  const re = new RegExp(`^(${NAME_RE})\\s*(?:->|→|-|–|\\s)\\s*(${NAME_RE})(?:\\s*:?\\s*(\\d+(?:\\.\\d+)?))?$`);
+  const nodes = new Set(), edges = [];
+  for (const it of items) {
+    const m = it.match(re);
+    if (!m) throw `לא הצלחתי להבין את השורה "${esc(it)}". כתבו קשת כמו ${c(weighted ? "1-2 4" : "1-2")}.`;
+    const [, u, v, w] = m;
+    if (u === v) throw `קשת מצומת לעצמו ("${esc(it)}") לא נתמכת.`;
+    if (weighted && w === undefined) throw `חסר משקל בקשת "${esc(it)}". כתבו למשל ${c(u + "-" + v + " 4")}.`;
+    nodes.add(u); nodes.add(v);
+    if (edges.find(e => (e.u === u && e.v === v) || (!directed && e.u === v && e.v === u))) throw `הקשת ${c(u + "-" + v)} מופיעה פעמיים.`;
+    edges.push({ u, v, w: w === undefined ? null : Number(w) });
+  }
+  if (!edges.length) throw "צריך לכתוב לפחות קשת אחת.";
+  return { nodes: sortIds([...nodes]), edges };
+}
+function neighbors(g, i, directed) {
+  const out = [];
+  for (const e of g.edges) { if (e.u === i) out.push(e.v); else if (!directed && e.v === i) out.push(e.u); }
+  return sortIds(out);
+}
+function edgeKey(u, v, directed) { return directed ? `${u}>${v}` : [u, v].sort().join("~"); }
+const norm = s => String(s).replace(/\s+/g, " ").replace(/\s*([\n,;])\s*/g, "$1").trim();
+
+/* layered layout (BFS layers from root) */
+function layeredLayout(nodes, edges, root, W = 620, H = 330) {
+  const adj = {}; nodes.forEach(n => adj[n] = []);
+  edges.forEach(e => { adj[e.u].push(e.v); adj[e.v].push(e.u); });
+  const layer = {}; const order = [];
+  for (const st of [root, ...nodes.filter(n => n !== root)]) {
+    if (layer[st] !== undefined) continue;
+    const base = order.length ? Math.max(...Object.values(layer)) + 1 : 0;
+    layer[st] = base; const q = [st];
+    while (q.length) { const x = q.shift(); order.push(x); for (const y of sortIds(adj[x])) if (layer[y] === undefined) { layer[y] = layer[x] + 1; q.push(y); } }
+  }
+  const L = Math.max(...Object.values(layer)) + 1;
+  const byLayer = Array.from({ length: L }, () => []);
+  order.forEach(n => byLayer[layer[n]].push(n));
+  const pos = {}, padX = 50, padY = 40;
+  byLayer.forEach((arr, li) => {
+    if (li > 0) { const bc = n => { const ps = adj[n].filter(p => layer[p] === li - 1).map(p => pos[p].y); return ps.length ? ps.reduce((a, b) => a + b, 0) / ps.length : H / 2; }; arr.sort((a, b) => bc(a) - bc(b)); }
+    const x = L === 1 ? W / 2 : padX + li * (W - 2 * padX) / (L - 1);
+    arr.forEach((n, k) => { pos[n] = { x, y: arr.length === 1 ? H / 2 : padY + k * (H - 2 * padY) / (arr.length - 1) }; });
+  });
+  return pos;
+}
+/* preset positions (from the lecture drawing), scaled into the box */
+function scalePos(raw, W = 620, H = 330, pad = 40) {
+  const xs = Object.values(raw).map(p => p[0]), ys = Object.values(raw).map(p => p[1]);
+  const x0 = Math.min(...xs), x1 = Math.max(...xs), y0 = Math.min(...ys), y1 = Math.max(...ys);
+  const sx = (W - 2 * pad) / Math.max(1, x1 - x0), sy = (H - 2 * pad) / Math.max(1, y1 - y0), s = Math.min(sx, sy * 1.6);
+  const ox = (W - (x1 - x0) * s) / 2, oy = (H - (y1 - y0) * Math.min(sy, s)) / 2;
+  const out = {}; for (const k in raw) out[k] = { x: ox + (raw[k][0] - x0) * s, y: oy + (raw[k][1] - y0) * Math.min(sy, s) }; return out;
+}
+
+/* ================== renderers ================== */
+function arrRow({ label, vals, base = 0, hl = {}, ptr = {}, idxShow = true, empty = null, keys = null }) {
+  let h = `<div class="arr" data-k="arr:${esc(label || "")}">${label ? `<div class="lbl">${label}</div>` : ""}<div class="row">`;
+  vals.forEach((v, k) => {
+    const isEmpty = empty !== null ? empty(v, k) : (v === null || v === undefined);
+    h += `<div class="cell" data-k="c${keys ? keys[k] : k}"><div class="ptr">${ptr[k] ? `<em>${ptr[k]}</em>` : ""}</div><div class="box ${hl[k] || ""} ${isEmpty ? "empty" : ""}">${isEmpty ? "" : esc(fmt(v))}</div>${idxShow ? `<div class="idx">${k + base}</div>` : ""}</div>`;
+  });
+  return h + "</div></div>";
+}
+const LEG = { cur: "var(--orange)", cmp: "var(--green)", done: "var(--cyan)", ok: "var(--cyan)", sel: "var(--pink)", vis: "var(--cyan-t);box-shadow:inset 0 0 0 2px var(--cyan)", S: "var(--cyan)", T: "var(--pink-t);box-shadow:inset 0 0 0 2px var(--pink)" };
+const LEGE = { tree: ["var(--cyan)", 0], flow: ["var(--cyan)", 0], path: ["var(--orange)", 0], cur: ["var(--orange)", 0], match: ["var(--green)", 0], cand: ["var(--green)", 1], cut: ["var(--pink)", 1] };
+function legend(items) {
+  return items.map(([k, t]) => k.startsWith("e:") ? `<span><i class="e ${LEGE[k.slice(2)][1] ? "dash" : ""}" style="border-color:${LEGE[k.slice(2)][0]}"></i>${t}</span>` : `<span><i style="background:${LEG[k]}"></i>${t}</span>`).join("");
+}
+const R = 20;
+const MARK = { idle: "#bbb", tree: "#2ebbd1", flow: "#2ebbd1", cand: "#52bc69", cur: "#ff8a27", path: "#ff8a27", match: "#52bc69", cut: "#e64980", dim: "#bbb" };
+function svgOpen(w, h) {
+  return `<svg data-k="svg" viewBox="0 0 ${w} ${h}" style="max-width:${Math.round(w * 1.25)}px" xmlns="http://www.w3.org/2000/svg"><defs>` +
+    Object.entries(MARK).map(([k, col]) => `<marker id="ar-${k}" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="${col}"/></marker>`).join("") + `</defs>`;
+}
+/* nodes: [{id,x,y,label,cls,sub,subDy,r}]  edges: [{u,v,label,cls,dir,bend,key}] */
+function drawGraph({ nodes, edges, w = 620, h = 330, r = R }) {
+  const P = {}; nodes.forEach(n => P[n.id] = n);
+  let s = svgOpen(w, h) + `<g data-k="E">`;
+  for (const e of edges) {
+    const a = P[e.u], b = P[e.v]; if (!a || !b) continue;
+    const cls = e.cls || "idle";
+    const ra = a.r || r, rb = b.r || r;
+    const dx = b.x - a.x, dy = b.y - a.y, len = Math.hypot(dx, dy) || 1, ux = dx / len, uy = dy / len;
+    const bend = e.bend || 0, gap = e.dir ? 4 : 0;
+    const marker = e.dir ? `marker-end="url(#ar-${MARK[cls] ? cls : "idle"})"` : "";
+    let d, lx, ly;
+    if (!bend) {
+      d = `M${(a.x + ux * ra).toFixed(1)},${(a.y + uy * ra).toFixed(1)} L${(b.x - ux * (rb + gap)).toFixed(1)},${(b.y - uy * (rb + gap)).toFixed(1)}`;
+      const t = e.labelPos || 0.5; lx = a.x + dx * t; ly = a.y + dy * t;
+    } else {
+      const mx = (a.x + b.x) / 2 - uy * bend, my = (a.y + b.y) / 2 + ux * bend;
+      const a1 = Math.atan2(my - a.y, mx - a.x), a2 = Math.atan2(my - b.y, mx - b.x);
+      d = `M${(a.x + Math.cos(a1) * ra).toFixed(1)},${(a.y + Math.sin(a1) * ra).toFixed(1)} Q${mx.toFixed(1)},${my.toFixed(1)} ${(b.x + Math.cos(a2) * (rb + gap)).toFixed(1)},${(b.y + Math.sin(a2) * (rb + gap)).toFixed(1)}`;
+      lx = (a.x + 2 * mx + b.x) / 4; ly = (a.y + 2 * my + b.y) / 4;
+    }
+    s += `<g class="eg ${cls}" data-k="e:${esc(e.key || (e.u + ">" + e.v + (bend ? "~" + bend : "")))}"><path d="${d}" ${marker}/>`;
+    if (e.label !== undefined && e.label !== null && e.label !== "") {
+      const t = String(e.label), tw = t.length * 7.4 + 10;
+      s += `<g class="lb" style="transform:translate(${lx.toFixed(1)}px,${ly.toFixed(1)}px)"><rect x="${-tw / 2}" y="-9.5" width="${tw}" height="19" rx="9.5"/><text x="0" y="0.5">${esc(t)}</text></g>`;
+    }
+    s += `</g>`;
+  }
+  s += `</g><g data-k="N">`;
+  for (const n of nodes) {
+    const rr = n.r || r;
+    s += `<g class="nd ${n.cls || ""}" data-k="n:${esc(n.id)}" style="transform:translate(${n.x.toFixed(1)}px,${n.y.toFixed(1)}px)">`;
+    s += n.shape === "rect" ? `<rect x="${-(n.wd || 30)}" y="-15" width="${2 * (n.wd || 30)}" height="30" rx="5"/>` : `<circle cx="0" cy="0" r="${rr}"/>`;
+    s += `<text x="0" y="0.5"${String(n.label ?? n.id).length > 3 ? ` style="font-size:12px"` : ""}>${esc(n.label !== undefined ? n.label : n.id)}</text>`;
+    if (n.sub !== undefined && n.sub !== null && n.sub !== "") s += `<text class="sub" x="0" y="${n.subDy || -(rr + 11)}">${esc(n.sub)}</text>`;
+    s += `</g>`;
+  }
+  return s + "</g></svg>";
+}
+function drawHeapTree(A, last, hl = {}, ids = null, w = 620, d = 2, subs = null) {
+  const n = last + 1;
+  if (n <= 0) return `<div style="text-align:center;color:var(--muted);padding:30px">הערימה ריקה</div>`;
+  const where = i => { let s = 0, size = 1, dep = 0; while (i >= s + size) { s += size; size *= d; dep++; } return { dep, p: i - s, size }; };
+  const depth = where(n - 1).dep + 1, LH = 72, h = depth * LH + 16, r = d > 2 ? 16 : R;
+  const nodes = [], edges = [];
+  for (let i = 0; i < n; i++) {
+    const { dep, p, size } = where(i);
+    nodes.push({ id: ids ? "h" + ids[i] : "h" + i, x: (p + 0.5) / size * w, y: 26 + dep * LH, label: fmt(A[i]), cls: hl[i] || "", sub: subs ? subs[i] : i, subDy: subs ? -(r + 11) : r + 13, r });
+    if (i > 0) { const pi = Math.floor((i - 1) / d); edges.push({ u: ids ? "h" + ids[pi] : "h" + pi, v: ids ? "h" + ids[i] : "h" + i, key: "t" + i, cls: (hl[i] && hl[pi] && hl[i] !== "dim" && hl[i] !== "done") ? "cur" : "" }); }
+  }
+  return drawGraph({ nodes, edges, w, h: h + 8, r });
+}
+function bstLayout(tree) {
+  const pos = {}; let k = 0, maxD = 0;
+  (function walk(id, d) { if (id === null) return; const nd = tree.N[id]; walk(nd.l, d + 1); pos[id] = { rank: k++, d }; maxD = Math.max(maxD, d); walk(nd.r, d + 1); })(tree.root, 0);
+  return { pos, count: k, maxD };
+}
+function drawBST(tree, hl = {}) {
+  if (tree.root === null) return `<div style="text-align:center;color:var(--muted);padding:30px">העץ ריק</div>`;
+  const { pos, count, maxD } = bstLayout(tree);
+  const w = 600, h = Math.max(4, maxD + 1) * 70 + 10;
+  const nodes = [], edges = [];
+  for (const id in pos) {
+    const p = pos[id], nd = tree.N[id];
+    nodes.push({ id, x: 30 + (p.rank + 0.5) * (w - 60) / Math.max(count, 7), y: 28 + p.d * 70, label: nd.key, cls: hl[id] || "" });
+    for (const ch of [nd.l, nd.r]) if (ch !== null) edges.push({ u: id, v: String(ch), key: "b" + ch, cls: (hl[ch] && hl[id] && hl[ch] !== "done" && hl[id] !== "done") ? "path" : "" });
+  }
+  const dx = (w - 60) / Math.max(count, 7) * (Math.max(count, 7) - count) / 2;
+  nodes.forEach(n => n.x += dx);
+  return drawGraph({ nodes, edges, w, h });
+}
+function varsChips(vars) { return (vars || []).map(([k, v]) => `<span class="chip"><span>${k}</span><b>${esc(v)}</b></span>`).join(""); }
+
+/* ---------- DOM morph: keeps elements between steps so colours fade and nodes glide ---------- */
+function morph(o, n) {
+  if (o.nodeType !== n.nodeType || o.nodeName !== n.nodeName || (o.nodeType === 1 && o.getAttribute("data-k") !== n.getAttribute("data-k"))) { o.replaceWith(n); return n; }
+  if (o.nodeType === 3) { if (o.nodeValue !== n.nodeValue) o.nodeValue = n.nodeValue; return o; }
+  if (o.nodeType !== 1) return o;
+  for (const a of [...o.attributes]) if (!n.hasAttribute(a.name)) o.removeAttribute(a.name);
+  for (const a of [...n.attributes]) if (o.getAttribute(a.name) !== a.value) o.setAttribute(a.name, a.value);
+  morphKids(o, n); return o;
+}
+function morphKids(o, n) {
+  const oldK = [...o.childNodes], newK = [...n.childNodes];
+  const keyed = new Map(), loose = [];
+  oldK.forEach(ch => { const k = ch.nodeType === 1 && ch.getAttribute("data-k"); if (k) keyed.set(k, ch); else loose.push(ch); });
+  let li = 0; const res = [];
+  for (const nk of newK) {
+    const k = nk.nodeType === 1 && nk.getAttribute("data-k");
+    let m = null;
+    if (k) { m = keyed.get(k) || null; if (m) keyed.delete(k); }
+    else if (li < loose.length && loose[li].nodeName === nk.nodeName) m = loose[li++];
+    if (m) res.push(morph(m, nk));
+    else { if (k && nk.classList) nk.classList.add("fade"); res.push(nk); }
+  }
+  for (const ch of oldK) if (!res.includes(ch)) ch.remove();
+  if (o.namespaceURI === "http://www.w3.org/2000/svg") {
+    // inside a drawing the order of elements does not matter; moving one would cancel its glide
+    res.forEach(ch => { if (ch.parentNode !== o) o.appendChild(ch); });
+  } else res.forEach((ch, i) => { if (o.childNodes[i] !== ch) o.insertBefore(ch, o.childNodes[i] || null); });
+}
+
+/* ================== player ================== */
+const ALGOS = [], TOPICS = [];
+function topic(num, name) { TOPICS.push({ num, name }); }
+function algo(def) { ALGOS.push(def); }
+let cur = null, steps = [], idx = 0, timer = null, runId = 0, shownRun = -1, OPT = {};
+const $ = id => document.getElementById(id);
+const TILE = ["var(--orange)", "var(--green)", "var(--cyan)", "var(--pink)"];
+
+function buildNav() {
+  const nav = $("nav"), tiles = $("tiles");
+  TOPICS.forEach((t, ti) => {
+    const list = ALGOS.filter(a => a.topic === t.num); if (!list.length) return;
+    const h = document.createElement("div"); h.className = "topic"; h.innerHTML = `<i>${t.num}</i>${esc(t.name)}`; nav.appendChild(h);
+    for (const a of list) {
+      const b = document.createElement("button"); b.textContent = a.name; b.dataset.id = a.id;
+      b.onclick = () => go2(a.id); nav.appendChild(b);
+    }
+    const tb = document.createElement("button"); tb.style.background = TILE[ti % 4];
+    tb.innerHTML = `${esc(t.name)}<small>${list.length} הנפשות</small>`; tb.onclick = () => go2(list[0].id); tiles.appendChild(tb);
+  });
+}
+function go2(id) { openAlgo(id); $("nav").classList.remove("open"); try { history.replaceState(null, "", "#" + id); } catch (e) {} }
+function toggle(btn, box, on) { const v = on !== undefined ? on : box.hidden; box.hidden = !v; btn.setAttribute("aria-expanded", String(v)); }
+function openAlgo(id) {
+  const a = ALGOS.find(x => x.id === id); if (!a) return;
+  stop(); cur = a;
+  document.querySelectorAll("nav button").forEach(b => b.classList.toggle("on", b.dataset.id === id));
+  $("welcome").hidden = true; $("algo").hidden = false;
+  $("algoName").textContent = a.name;
+  $("tag").innerHTML = a.tag || "";
+  $("intro").innerHTML = a.intro;
+  toggle($("tInfo"), $("intro"), false); toggle($("tInput"), $("inputsBox"), false);
+  $("legend").innerHTML = a.legend ? legend(a.legend) : "";
+  OPT = {}; (a.opts || []).forEach(o => OPT[o.key] = o.def);
+  renderKnobs(); renderCode();
+  const inp = $("inputs"); inp.innerHTML = "";
+  for (const f of a.inputs) {
+    const lab = document.createElement("label"); lab.innerHTML = f.label;
+    const el = document.createElement(f.multi ? "textarea" : "input");
+    el.value = f.def; el.id = "in_" + f.key; if (!f.multi) el.size = f.size || 24;
+    el.addEventListener("keydown", e => { if (e.key === "Enter" && !f.multi) run(); e.stopPropagation(); });
+    lab.appendChild(el);
+    if (f.hint) { const hh = document.createElement("div"); hh.className = "hint"; hh.innerHTML = f.hint; lab.appendChild(hh); }
+    inp.appendChild(lab);
+  }
+  const g = document.createElement("button"); g.className = "btn"; g.textContent = "הרצה"; g.onclick = run;
+  const reset = document.createElement("button"); reset.className = "btn ghost"; reset.textContent = "חזרה לדוגמה";
+  reset.onclick = () => { a.inputs.forEach(f => $("in_" + f.key).value = f.def); run(); };
+  const err = document.createElement("div"); err.className = "err"; err.id = "err";
+  inp.append(g, reset, err);
+  $("main").scrollTop = 0;
+  run();
+}
+function codeOf() { return typeof cur.code === "function" ? cur.code(OPT) : cur.code; }
+function renderCode() {
+  const codeEl = $("code"); codeEl.className = cur.codeHe ? "he" : "";
+  codeEl.innerHTML = codeOf().map((l, i) => `<div data-l="${i}"><span class="ln">${l.trim() ? i + 1 : ""}</span><span class="tx">${esc(l).replace(/`([^`]+)`/g, '<span class="ltr">$1</span>') || "&nbsp;"}</span></div>`).join("");
+}
+function renderKnobs() {
+  const box = $("knobs"); box.innerHTML = "";
+  for (const o of cur.opts || []) {
+    const k = document.createElement("div"); k.className = "knob"; k.innerHTML = `<span>${o.label}</span>`;
+    const seg = document.createElement("span"); seg.className = "seg";
+    for (const [v, lab, note] of o.choices) {
+      const b = document.createElement("button"); b.innerHTML = esc(lab) + (note ? `<small>${esc(note)}</small>` : ""); b.className = OPT[o.key] === v ? "on" : "";
+      b.onclick = () => { OPT[o.key] = v; renderKnobs(); renderCode(); run(); };
+      seg.appendChild(b);
+    }
+    k.appendChild(seg); box.appendChild(k);
+  }
+}
+function readInputs() { const o = {}; cur.inputs.forEach(f => o[f.key] = $("in_" + f.key).value); return o; }
+function isDefault() { return cur.inputs.every(f => norm($("in_" + f.key).value) === norm(f.def)); }
+function run() {
+  stop();
+  const err = $("err"); err.innerHTML = "";
+  let input;
+  try { input = cur.parse(readInputs(), OPT); input.__default = isDefault(); input.__opt = { ...OPT }; steps = cur.run(input); if (!steps.length) throw "לא נוצרו צעדים."; }
+  catch (e) { err.innerHTML = typeof e === "string" ? e : "שגיאה: " + esc(e.message || e); toggle($("tInput"), $("inputsBox"), true); if (typeof e !== "string") console.error(e); return; }
+  const b = $("badge");
+  if (!input.__default) { b.className = "badge own"; b.textContent = "הקלט שלכם"; }
+  else if (cur.src) { b.className = "badge lec"; b.textContent = "הדוגמה מההרצאה · " + cur.src; }
+  else { b.className = "badge ext"; b.textContent = "דוגמה נוספת (לא מההרצאה)"; }
+  if ((cur.opts || []).some(o => OPT[o.key] !== o.def)) { b.className = "badge own"; b.textContent += " · וריאציה שבחרתם (לא הגרסה מההרצאה)"; }
+  runId++; $("scrub").max = steps.length - 1;
+  idx = 0; show();
+}
+function show() {
+  const st = steps[idx], viz = $("viz");
+  const tpl = document.createElement("template"); tpl.innerHTML = cur.render(st);
+  const same = shownRun === runId && viz.firstChild;
+  if (same) morphKids(viz, tpl.content); else { viz.replaceChildren(tpl.content); viz.style.minHeight = ""; $("msg").parentNode.style.minHeight = ""; }
+  shownRun = runId;
+  $("msg").innerHTML = st.msg || "";
+  // keep the board from shrinking between steps, so nothing below it jumps
+  const cap = $("msg").parentNode;
+  requestAnimationFrame(() => { viz.style.minHeight = Math.max(viz.offsetHeight, parseFloat(viz.style.minHeight) || 0) + "px"; cap.style.minHeight = Math.max(cap.offsetHeight, parseFloat(cap.style.minHeight) || 0) + "px"; });
+  document.querySelectorAll("#code > div").forEach(d => d.classList.toggle("on", Array.isArray(st.line) ? st.line.includes(+d.dataset.l) : +d.dataset.l === st.line));
+  const onEl = document.querySelector("#code > div.on");
+  if (onEl) { const box = onEl.closest(".code"); const top = onEl.offsetTop - box.offsetTop; if (top < box.scrollTop + 20 || top > box.scrollTop + box.clientHeight - 30) box.scrollTop = top - 60; }
+  $("vars").innerHTML = varsChips(st.vars);
+  $("count").textContent = `${idx + 1}/${steps.length}`;
+  $("scrub").value = idx;
+  $("bPrev").disabled = $("bFirst").disabled = idx === 0;
+  $("bNext").disabled = idx === steps.length - 1;
+}
+function step(d) { const n = idx + d; if (n < 0 || n >= steps.length) return false; idx = n; show(); return true; }
+function delay() { return 1800 - +$("speed").value * 16; }
+const PLAY = '<path d="M7 5v14l11-7z"/>', PAUSE = '<path d="M7 5h4v14H7zM13 5h4v14h-4z"/>';
+function play() {
+  if (timer) return stop();
+  if (idx === steps.length - 1) { idx = 0; show(); }
+  $("playIcon").innerHTML = PAUSE;
+  const tick = () => { if (!step(1)) return stop(); timer = setTimeout(tick, delay()); };
+  timer = setTimeout(tick, Math.min(500, delay()));
+}
+function stop() { clearTimeout(timer); timer = null; const p = $("playIcon"); if (p) p.innerHTML = PLAY; }
+
+/* ================== search (free, runs in the page) ================== */
+const HE_PREFIX = /^(ו|ה|ב|ל|מ|ש|כ|וה|וב|ול|ומ|שה|שב|של|בה|לה|מה|כש)(?=[֐-׿]{3,})/;
+const FINALS = { "ך": "כ", "ם": "מ", "ן": "נ", "ף": "פ", "ץ": "צ" };
+function toks(s) {
+  return String(s).toLowerCase().replace(/<[^>]+>/g, " ").replace(/[ךםןףץ]/g, ch => FINALS[ch]).split(/[^a-z0-9֐-׿]+/).filter(t => t.length > 1).map(t => t.replace(HE_PREFIX, ""));
+}
+let INDEX = null;
+function buildIndex() {
+  INDEX = [];
+  for (const a of ALGOS) {
+    const t = TOPICS.find(t => t.num === a.topic);
+    INDEX.push({ kind: "a", id: a.id, title: a.name, sub: `נושא ${t.num} · ${t.name}`, T: toks(a.name + " " + (a.kw || "")), B: toks((a.tag || "") + " " + a.intro + " " + t.name) });
+  }
+  for (const [lec, from, to, title] of (typeof SLIDES !== "undefined" ? SLIDES : [])) {
+    const t = TOPICS.find(t => +t.num === lec);
+    INDEX.push({ kind: "s", lec, title, sub: `הרצאה ${lec} · ${from === to ? "שקף " + from : `שקפים ${from}–${to}`}`, T: toks(title), B: toks(t ? t.name : ""), topic: t && t.num });
+  }
+}
+function search(q) {
+  if (!INDEX) buildIndex();
+  const qt = toks(q); if (!qt.length) return [];
+  const hit = (arr, w) => arr.some(x => x.startsWith(w) || (w.length > 3 && x.includes(w)));
+  return INDEX.map(it => { let s = 0; for (const w of qt) { if (hit(it.T, w)) s += 3; else if (hit(it.B, w)) s += 1; } return { it, s: s + (it.kind === "a" ? 0.5 : 0) }; })
+    .filter(r => r.s >= Math.max(1, qt.length * 0.9)).sort((a, b) => b.s - a.s);
+}
+function renderResults() {
+  const q = $("q").value.trim(), box = $("results");
+  if (!q) { box.innerHTML = ""; return; }
+  const r = search(q), A = r.filter(x => x.it.kind === "a").slice(0, 6), S = r.filter(x => x.it.kind === "s").slice(0, 8);
+  if (!A.length && !S.length) { box.innerHTML = `<div class="none">לא נמצא. נסו מילה אחרת, למשל שם של אלגוריתם או מושג מההרצאה.</div>`; return; }
+  box.innerHTML = (A.length ? `<div class="grp">הנפשות</div>` + A.map(x => `<a data-a="${x.it.id}"><b>${esc(x.it.title)}</b><small>${esc(x.it.sub)}</small></a>`).join("") : "") +
+    (S.length ? `<div class="grp">איפה זה בהרצאות (השקפים במודל)</div>` + S.map(x => `<a data-t="${x.it.topic || ""}"><b>${esc(x.it.title)}</b><small>${esc(x.it.sub)}</small></a>`).join("") : "");
+  box.querySelectorAll("a").forEach(el => el.onclick = () => {
+    const id = el.dataset.a || (ALGOS.find(a => a.topic === el.dataset.t) || {}).id;
+    if (id) go2(id); box.innerHTML = ""; $("q").value = "";
+  });
+}
+
+function initUI() {
+  buildNav();
+  $("bNext").onclick = () => { stop(); step(1); };
+  $("bPrev").onclick = () => { stop(); step(-1); };
+  $("bFirst").onclick = () => { stop(); idx = 0; show(); };
+  $("bPlay").onclick = play;
+  $("scrub").oninput = e => { stop(); idx = +e.target.value; show(); };
+  $("tInfo").onclick = () => toggle($("tInfo"), $("intro"));
+  $("tInput").onclick = () => toggle($("tInput"), $("inputsBox"));
+  $("menuBtn").onclick = () => $("nav").classList.toggle("open");
+  $("q").addEventListener("input", renderResults);
+  $("q").addEventListener("keydown", e => { if (e.key === "Enter") { const a = $("results").querySelector("a"); if (a) a.click(); } if (e.key === "Escape") { $("q").value = ""; renderResults(); } });
+  document.addEventListener("click", e => { if (!e.target.closest(".search")) $("results").innerHTML = ""; });
+  document.addEventListener("keydown", e => {
+    if (!cur || e.target.closest("input,textarea")) return;
+    if (e.key === "ArrowLeft") { stop(); step(1); e.preventDefault(); }
+    else if (e.key === "ArrowRight") { stop(); step(-1); e.preventDefault(); }
+    else if (e.key === " ") { play(); e.preventDefault(); }
+  });
+  const fromHash = () => { const h = location.hash.slice(1); if (h && ALGOS.find(a => a.id === h) && (!cur || cur.id !== h)) openAlgo(h); };
+  fromHash(); window.addEventListener("hashchange", fromHash);
+}
+const SLIDES = [[1, 3, 3, "מה זה אלגוריתם ?"], [1, 4, 4, "ההגדרה היבשה"], [1, 5, 5, "דוגמא – האלגוריתם של אוקלידס"], [1, 6, 6, "דוגמאות נוספות"], [1, 7, 10, "אלגוריתם = תיאור סופי של פעולות בסיסיות"], [1, 11, 11, "מהו אלגוריתם טוב ?"], [1, 12, 12, "אלגוריתם טוב = זמן ריצה מינימלי"], [1, 13, 14, "ביצוע פעולה בסיסית"], [1, 15, 16, "זמן ריצה = מספר פעולות בסיסיות ( )"], [1, 17, 18, "ניתוח המקרה הגרוע"], [1, 19, 20, "הזנחת קבועים"], [1, 21, 21, "מתמטיקה אסימפטומטית"], [1, 22, 27, "O גדול"], [1, 28, 31, "o קטן"], [1, 32, 32, "סימנים נוספים"], [1, 33, 33, "סימונים נוספים"], [1, 34, 34, "סיכום"], [2, 2, 4, "בעיית המיון"], [2, 5, 7, "פעולות בסיסיות"], [2, 8, 8, "תזכורת - O גדול"], [2, 9, 11, "אלגוריתמים איטרטיביים"], [2, 12, 16, "חימום – מציאת מינימום במערך"], [2, 17, 20, "אלגוריתם נאיבי"], [2, 21, 24, "מיון מניה"], [2, 25, 25, "מיון מניה – ניתוח לוקאלי"], [2, 26, 26, "מיון מניה – ניתוח גלובאלי"], [2, 27, 27, "מיון מניה – ניתוח לוקאלי מול גלובלי"], [2, 28, 28, "סיכום"], [3, 2, 2, "בעיית המיון"], [3, 3, 6, "אלגוריתמים רקורסיביים"], [3, 7, 8, "ניתוח אלגוריתמים רקורסיבים"], [3, 9, 32, "אלגוריתם מיון מיזוג"], [3, 33, 36, "עצים בינארים שלמים"], [3, 37, 39, "ניתוח לוקאלי למיון מיזוג"], [3, 40, 40, "ניתוח גלובלי למיון מיזוג"], [3, 41, 42, "ניתוח גלובאלי למיון מיזוג"], [3, 43, 45, "ניתוח בצורה ישירה למיון מיזוג"], [3, 46, 48, "מיזוג ב- O(n) זמן"], [3, 49, 49, "סיכום"], [4, 2, 3, "מבני נתונים לחיפוש"], [4, 4, 5, "שני מבני נתונים בסיסים"], [4, 6, 9, "חיפוש בינארי"], [4, 10, 10, "השוואה בין מערך לרשימה מקושרת"], [4, 11, 16, "עצי חיפוש בינאריים"], [4, 17, 19, "סריקה של עצי חיפוש בינאריים"], [4, 20, 22, "חיפוש בעצי חיפוש בינאריים"], [4, 23, 23, "הכנסה בעצי חיפוש בינאריים"], [4, 24, 26, "הוצאה בעצי חיפוש בינאריים"], [4, 27, 30, "דוגמא לסדרה של פעולות"], [4, 31, 33, "עצי חיפוש בינאריים מאוזנים"], [4, 34, 34, "סיכום"], [5, 2, 3, "בעיית תור העדיפויות"], [5, 4, 8, "ערימה בינארית"], [5, 9, 9, "מציאת מינימום"], [5, 10, 10, "הכנסת איבר חדש"], [5, 11, 11, "הוצאת האיבר המינימלי"], [5, 12, 14, "דוגמא לסדרה של פעולות"], [5, 15, 23, "בניית ערימה בינארית"], [5, 24, 30, "מימוש ערימה בינארית כמערך"], [5, 31, 32, "מיון נאיבי  מיון ערימה"], [5, 33, 33, "סיכום"], [6, 2, 8, "גרפים ורשתות"], [6, 9, 10, "ייצוג של גרפים"], [6, 11, 12, "דרגות ושכנים"], [6, 13, 13, "קליקות וקבוצות בלתי תלויות"], [6, 14, 14, "מסלולים ומעגלים"], [6, 15, 16, "רכיבי קשירות ועצים"], [6, 17, 23, "חיפוש לרוחב (BFS)"], [6, 24, 29, "חיפוש לעומק (DFS)"], [6, 30, 33, "מציאת רכיבי קשירות"], [6, 34, 34, "סיכום"], [7, 2, 3, "בעיית תכנון הרשתות"], [7, 4, 9, "קשירות מינימלית"], [7, 10, 11, "בעיית העץ הפורש המינימלי"], [7, 12, 22, "האלגוריתם של פרים (Prim)"], [7, 23, 25, "סיבוכיות זמן"], [7, 26, 44, "האצה בעזרת ערימה בינארית"], [7, 45, 49, "נכונות האלגוריתם"], [7, 50, 50, "סיכום"], [8, 2, 3, "גרפים מכוונים"], [8, 4, 6, "בעיית הנתיב הקצר ביותר"], [8, 7, 9, "האלגוריתם של דייקסטרה (Dijkstra)"], [8, 10, 23, "דוגמא לריצת האלגוריתם"], [8, 24, 31, "נכונות האלגוריתם"], [8, 32, 33, "סיבוכיות זמן האלגוריתם"], [8, 34, 47, "האצה בעזרת ערימה בינארית"], [8, 48, 48, "סיכום"], [9, 2, 4, "שידוך בגרפים"], [9, 5, 5, "שידוך מקסימלי בהכלה"], [9, 6, 7, "שידוך מקסימלי"], [9, 8, 12, "מסלולי שיפור"], [9, 13, 17, "הלמה של Berge"], [9, 18, 20, "אלגוריתם לשידוך מקסימלי"], [9, 21, 22, "גרפים דו-צדדיים"], [9, 23, 27, "שידוך דו-צדדי"], [9, 28, 31, "מציאת מסלולי שיפור בגרף דו-צדדי"], [9, 32, 37, "אלגוריתם לשידוך דו-צדדי"], [9, 38, 38, "סיכום"], [10, 2, 5, "זרימה ברשת זרימה"], [10, 6, 9, "בעיית הזרימה המקסימלית"], [10, 10, 11, "חתך ברשת זרימה"], [10, 12, 12, "בעיית החתך המינימלי"], [10, 13, 13, "זרימה ≤ חתך"], [10, 14, 15, "רשת שיורית"], [10, 16, 20, "מסלולי שיפור ברשת שיורית"], [10, 21, 25, "המשפט של פורד-פולקרסון"], [10, 26, 26, "זרימה מקסימלית = חתך מינימלי"], [10, 27, 28, "האלגוריתם של פורד-פולקרסון"], [10, 29, 29, "בעיית הזרימה המקסימלית"], [10, 30, 38, "האלגוריתם של פורד-פולקרסון"], [10, 39, 41, "דוגמאות לשימושים של זרימה"], [10, 42, 42, "סיכום"], [11, 2, 2, "מוטיבציה"], [11, 3, 8, "בעיות הכרעה"], [11, 9, 11, "המחלקה P"], [11, 12, 18, "בעיית הספיקות (SAT)"], [11, 19, 24, "רדוקציה (צמצום)"], [11, 25, 29, "המחלקה NP"], [11, 30, 33, "רדוקציה ממסלול ארוך ל- SAT"], [11, 34, 34, "רדוקציה מסלול ארוך ל- SAT"], [11, 35, 36, "רדוקציה ממסלול ארוך ל- SAT"], [11, 37, 38, "רדוקציה מסלול ארוך ל- SAT"], [11, 39, 39, "רדוקציה ממסלול ארוך ל- SAT"], [11, 40, 48, "רדוקציה מכיסוי צמתים ל- SAT"], [11, 49, 49, "שאלת מיליון הדולר"], [12, 2, 2, "שאלת מיליון הדולר"], [12, 3, 3, "רדוקציה (צמצום)"], [12, 4, 11, "הרכבת רדוקציות"], [12, 12, 14, "NP-שלמות"], [12, 15, 23, "3-SAT היא NP-שלמה"], [12, 24, 35, "כיסוי צמתים היא NP-שלמה"], [12, 36, 46, "מסלול ארוך היא NP-שלמה"], [12, 47, 48, "סיכום"]];
+/* ================== topics ================== */
+topic("01", "ניתוח אסימפטוטי");
+topic("02", "מיון מנייה");
+topic("03", "מיון מיזוג");
+topic("04", "עצי חיפוש בינאריים");
+topic("05", "ערימות בינאריות");
+topic("06", "גרפים");
+topic("07", "עץ פורש מינימלי");
+topic("08", "מסלולים קצרים");
+topic("09", "שידוך בגרפים דו-צדדיים");
+topic("10", "זרימה מקסימלית");
+topic("11", "רדוקציות – P מול NP");
+topic("12", "בעיות NP-שלמות");
+
+/* ---------- 01: GCD ---------- */
+algo({
+  id: "gcd", topic: "01", name: "האלגוריתם של אוקלידס (GCD)",
+  tag: "מוצאים מחלק משותף מקסימלי בעזרת שאריות.", kw: "gcd euclid אוקלידס מחלק משותף שארית mod", src: "הרצאה 1",
+  intro: `<b>מה זה?</b> אלגוריתם שמוצא את המחלק המשותף הגדול ביותר של שני מספרים ${c("x > y")}. הרעיון: מחשבים את השארית ${c("x mod y")}. אם היא 0, אז ${c("y")} הוא התשובה. אחרת ממשיכים עם הזוג ${c("(y, x mod y)")}, שהוא זוג קטן יותר עם אותו מחלק משותף.<br><b>בהרצאה:</b> הדוגמה ${c("GCD(27,15)")}, שהתשובה שלה היא 3.`,
+  code: ["GCD(x, y)", "  r = x mod y", "  If r = 0 Then Return y", "  Return GCD(y, r)"],
+  inputs: [{ key: "xy", label: "שני מספרים x, y", def: "27, 15", size: 14 }],
+  parse(i) {
+    const v = parseNums(i.xy, "שני מספרים");
+    if (v.length !== 2 || !v.every(n => Number.isInteger(n) && n > 0)) throw "צריך שני מספרים שלמים וחיוביים, למשל 27, 15.";
+    let [x, y] = v; if (x < y) [x, y] = [y, x];
+    if (x === y) throw "צריך x > y (שני מספרים שונים).";
+    return { x, y };
+  },
+  run({ x, y }) {
+    const S = [], calls = [];
+    const snap = (line, msg, vars) => S.push({ line, msg, vars, calls: clone(calls) });
+    let a = x, b = y;
+    while (true) {
+      calls.push({ t: `GCD(${a}, ${b})`, note: "", st: "cur" });
+      snap(0, `קוראים ל-${c(`GCD(${a}, ${b})`)}.`, [["x", a], ["y", b]]);
+      const r = a % b;
+      calls[calls.length - 1].note = `${a} mod ${b} = ${r}`;
+      snap(1, `מחשבים את השארית: ${c(`${a} mod ${b} = ${r}`)}.`, [["x", a], ["y", b], ["r", r]]);
+      if (r === 0) {
+        calls[calls.length - 1].note += " → מחזירים " + b;
+        calls.forEach(cl => cl.st = "ok");
+        snap(2, `השארית היא 0, כלומר ${b} מחלק את ${a}. לכן מחזירים ${c(b)}, והתשובה היא <b>${b}</b>.`, [["x", a], ["y", b], ["r", r], ["פלט", b]]);
+        break;
+      }
+      snap(2, `השארית ${r} היא לא 0, אז ממשיכים.`, [["x", a], ["y", b], ["r", r]]);
+      calls[calls.length - 1].st = "";
+      snap(3, `קוראים ל-${c(`GCD(${b}, ${r})`)}: המחלק המשותף של ${a} ו-${b} הוא אותו מחלק משותף של ${b} ו-${r}.`, [["x", a], ["y", b], ["r", r]]);
+      [a, b] = [b, r];
+    }
+    return S;
+  },
+  render(st) {
+    return `<div class="cards">${st.calls.map((cl, k) => `<div class="card ${cl.st}" data-k="g${k}"><code>${cl.t}</code> ${cl.note ? `<span class="ltr">${esc(cl.note)}</span>` : ""}</div>`).join("")}</div>`;
+  },
+});
+
+/* ---------- 02: naive sort with FindMin ---------- */
+algo({
+  id: "naive", topic: "02", name: "המיון הנאיבי (FindMin)",
+  tag: "בכל סיבוב מוצאים את הקטן ביותר ומעבירים אותו לפלט.", kw: "findmin מינימום מיון נאיבי sort", src: null,
+  intro: `<b>מה זה?</b> מיון פשוט: בכל סיבוב מוצאים את האיבר הקטן ביותר במערך ${c("A")} בעזרת ${c("FindMin")}, מעתיקים אותו למקום הבא במערך הפלט ${c("B")}, ומסמנים אותו ב-${c("A")} כ-${c("∞")} כדי שלא ייבחר שוב.<br><b>זמן ריצה:</b> כל ${c("FindMin")} עולה ${c("O(n)")}, ועושים ${c("n")} סיבובים, ולכן בסך הכול ${c("O(n²)")}.`,
+  code: ["Sort(A[1,…,n])", "  min = 0.", "  idxA = 1.", "  idxB = 1.", "  While idxB ≤ n Do", "    (min, idxA) = FindMin(A[1, …, n]).", "    B[idxB] = min.", "    A[idxA] = ∞.", "    idxB := idxB + 1.", "  End While.", "  Return B[1, …, n].", "",
+    "FindMin(A[1,…,n])", "  i = 1.", "  min = A[1].", "  idx = 1.", "  While i ≤ n Do", "    If A[i] < min Then", "      min = A[i].", "      idx = i.", "    End If.", "    i := i + 1.", "  End While.", "  Return (min,idx)."],
+  legend: [["cur","i – בודקים עכשיו"],["sel","המינימום עד עכשיו"],["ok","כבר ב-B"]],
+  inputs: [{ key: "a", label: "המערך A", def: "5, 24, 4, 1, 13, 10", hint: "עד 10 מספרים" }],
+  parse(i) { const a = parseNums(i.a, "מערך"); if (a.length > 10) throw "עד 10 מספרים, כדי שההנפשה תהיה ברורה."; return { a }; },
+  run({ a }) {
+    const n = a.length, A = a.slice(), B = Array(n).fill(null), S = [];
+    const snap = (line, msg, x = {}) => S.push({ line, msg, A: A.slice(), B: B.slice(), ...x, vars: x.vars });
+    snap(0, `מתחילים: ${c("A")} הוא הקלט, ${c("B")} ריק.`);
+    snap([1, 2, 3], `מאתחלים ${c("min = 0")}, ${c("idxA = 1")}, ${c("idxB = 1")}.`, { vars: [["idxB", 1]] });
+    for (let ib = 1; ib <= n; ib++) {
+      snap(4, `${c(`idxB = ${ib} ≤ ${n}`)}, אז ממשיכים: צריך למצוא את האיבר שיגיע ל-${c(`B[${ib}]`)}.`, { ib, vars: [["idxB", ib]] });
+      let i = 1, mn = A[0], id = 1;
+      snap([13, 14, 15], `${c("FindMin")}: מתחילים עם ${c(`min = A[1] = ${fmt(mn)}`)} ו-${c("idx = 1")}.`, { ib, i, id, vars: [["idxB", ib], ["i", i], ["min", fmt(mn)], ["idx", id]] });
+      for (; i <= n; i++) {
+        const v = A[i - 1];
+        if (v < mn) {
+          mn = v; id = i;
+          snap([17, 18, 19], `${c(`A[${i}] = ${fmt(v)}`)} קטן מהמינימום שהיה, אז מעדכנים: ${c(`min = ${fmt(mn)}`)}, ${c(`idx = ${id}`)}.`, { ib, i, id, vars: [["idxB", ib], ["i", i], ["min", fmt(mn)], ["idx", id]] });
+        } else {
+          snap(17, `${c(`A[${i}] = ${fmt(v)}`)} לא קטן מ-${c(`min = ${fmt(mn)}`)}, אז לא משנים כלום.`, { ib, i, id, vars: [["idxB", ib], ["i", i], ["min", fmt(mn)], ["idx", id]] });
+        }
+      }
+      snap(23, `${c("FindMin")} סיים: האיבר הקטן ביותר הוא ${c(fmt(mn))}, במקום ${c(id)}.`, { ib, id, vars: [["idxB", ib], ["min", fmt(mn)], ["idxA", id]] });
+      B[ib - 1] = mn;
+      snap(6, `מעתיקים אותו: ${c(`B[${ib}] = ${fmt(mn)}`)}.`, { ib, id, vars: [["idxB", ib], ["min", fmt(mn)], ["idxA", id]] });
+      A[id - 1] = INF;
+      snap(7, `מסמנים ${c(`A[${id}] = ∞`)}, כדי שבסיבובים הבאים הוא לא ייבחר שוב.`, { ib, id, vars: [["idxB", ib], ["idxA", id]] });
+    }
+    snap(10, `${c(`idxB = ${n + 1} > ${n}`)}, אז הלולאה נגמרת ומחזירים את ${c("B")}, שהוא ממוין. <b>סך הכול: ${n} סיבובים × ${n} בדיקות = ${c("O(n²)")}.</b>`, { done: true });
+    return S;
+  },
+  render(st) {
+    const hl = {}, ptr = {};
+    if (st.i) { hl[st.i - 1] = "cur"; ptr[st.i - 1] = "i"; }
+    if (st.id) { hl[st.id - 1] = "sel"; ptr[st.id - 1] = (ptr[st.id - 1] ? ptr[st.id - 1] + "," : "") + "idx"; }
+    const hb = {}, pb = {};
+    st.B.forEach((v, k) => { if (v !== null) hb[k] = "ok"; });
+    if (st.ib) pb[st.ib - 1] = "idxB";
+    return arrRow({ label: "A", vals: st.A, base: 1, hl, ptr }) + arrRow({ label: "B (הפלט)", vals: st.B, base: 1, hl: hb, ptr: pb });
+  },
+});
+
+/* ---------- 02: counting sort ---------- */
+algo({
+  id: "counting", topic: "02", name: "מיון מנייה (Counting Sort)",
+  tag: "סופרים כמה פעמים מופיע כל מספר, ובונים מזה את הפלט.", kw: "counting sort מיון מנייה מונים", src: "הרצאה 2",
+  intro: `<b>מה זה?</b> מיון למספרים שלמים בטווח ${c("1…k")}. במקום להשוות בין איברים, <b>סופרים</b> כמה פעמים מופיע כל מספר: ${c("C[j]")} = כמה פעמים ${c("j")} מופיע ב-${c("A")}. אחר כך עוברים על ${c("j = 1…k")} לפי הסדר וכותבים ל-${c("B")} כל מספר כמה פעמים שהוא הופיע.<br><b>זמן ריצה:</b> ${c("O(n + k)")}. כדאי כשהטווח ${c("k")} קטן.`,
+  code: ["CountingSort(A[1,…,n], k)", "  C[1,...,k] = 0.", "  i = 1.", "  While i ≤ n Do C[A[i]] = C[A[i]] + 1, i = i + 1.", "  i = 1 and j = 1.", "  While j ≤ k Do", "    While C[j] > 0 Do", "      B[i] = j.", "      i = i + 1.", "      C[j] = C[j] – 1.", "    End While", "    j = j + 1.", "  End While", "  Return B[1,...,n]."],
+  legend: [["cur","האיבר שמטפלים בו"],["cmp","התא שמשתנה ב-C"],["ok","נכתב ל-B"]],
+  inputs: [{ key: "a", label: "המערך A (מספרים שלמים 1…k)", def: "2, 1, 2, 2, 4, 1, 4, 2" }, { key: "k", label: "k", def: "4", size: 4 }],
+  parse(i) {
+    const a = parseNums(i.a, "מערך"), k = parseInt1(i.k, "k");
+    if (k < 1 || k > 12) throw "k צריך להיות בין 1 ל-12.";
+    if (a.length > 12) throw "עד 12 מספרים.";
+    a.forEach(v => { if (!Number.isInteger(v) || v < 1 || v > k) throw `כל המספרים צריכים להיות שלמים בין 1 ל-k=${k}. (${esc(v)} לא בטווח)`; });
+    return { a, k };
+  },
+  run({ a, k }) {
+    const n = a.length, C = Array(k).fill(0), B = Array(n).fill(null), S = [];
+    const snap = (line, msg, x = {}) => S.push({ line, msg, A: a, C: C.slice(), B: B.slice(), ...x });
+    snap(0, `קלט: ${n} מספרים בטווח ${c(`1…${k}`)}.`);
+    snap(1, `מאפסים את מערך המונים ${c(`C[1…${k}]`)}.`);
+    for (let i = 1; i <= n; i++) {
+      C[a[i - 1] - 1]++;
+      snap(3, `${c(`A[${i}] = ${a[i - 1]}`)}, אז מגדילים את ${c(`C[${a[i - 1]}]`)} ל-${C[a[i - 1] - 1]}.`, { ai: i, cj: a[i - 1], vars: [["i", i]] });
+    }
+    snap(4, `סיימנו לספור. עכשיו ${c("C[j]")} אומר כמה פעמים ${c("j")} מופיע. כותבים את הפלט לפי הסדר.`, { vars: [["i", 1], ["j", 1]] });
+    let i = 1;
+    for (let j = 1; j <= k; j++) {
+      snap([5, 6], C[j - 1] > 0 ? `${c(`j = ${j}`)}: ${c(`C[${j}] = ${C[j - 1]}`)}, אז כותבים את ${j} ל-${c("B")} ${C[j - 1]} פעמים.` : `${c(`j = ${j}`)}: ${c(`C[${j}] = 0`)}, אין מה לכתוב.`, { cj: j, bi: i, vars: [["i", i], ["j", j]] });
+      while (C[j - 1] > 0) {
+        B[i - 1] = j; C[j - 1]--;
+        snap([7, 8, 9], `${c(`B[${i}] = ${j}`)}, ומקטינים את ${c(`C[${j}]`)} ל-${C[j - 1]}.`, { cj: j, bw: i, bi: i + 1, vars: [["i", i + 1], ["j", j]] });
+        i++;
+      }
+      if (j < k) snap(11, `עוברים ל-${c(`j = ${j + 1}`)}.`, { cj: j + 1, bi: i, vars: [["i", i], ["j", j + 1]] });
+    }
+    snap(13, `${c(`j = ${k + 1} > k`)}, מסיימים ומחזירים את ${c("B")}, שהוא ממוין.`, { done: true });
+    return S;
+  },
+  render(st) {
+    const ha = {}, hc = {}, hb = {}, pa = {}, pb = {}, pc = {};
+    if (st.ai) { ha[st.ai - 1] = "cur"; pa[st.ai - 1] = "i"; }
+    if (st.cj) { hc[st.cj - 1] = "cmp"; pc[st.cj - 1] = "j"; }
+    st.B.forEach((v, k) => { if (v !== null) hb[k] = "ok"; });
+    if (st.bw) hb[st.bw - 1] = "sel";
+    if (st.bi && st.bi <= st.B.length) pb[st.bi - 1] = "i";
+    return arrRow({ label: "A", vals: st.A, base: 1, hl: ha, ptr: pa }) + arrRow({ label: "C (מונים)", vals: st.C, base: 1, hl: hc, ptr: pc }) + arrRow({ label: "B (הפלט)", vals: st.B, base: 1, hl: hb, ptr: pb });
+  },
+});
+
+/* ---------- 03: Merge ---------- */
+const MERGE_CODE = ["Merge(B1[1,…,n/2], B2[1,…,n/2])", "  idx = idx1 = idx2 = 1.", "  While idx1 ≤ n/2 and idx2 ≤ n/2 Do", "    If B1[idx1] ≤ B2[idx2] Then B[idx] = B1[idx1] and idx1 = idx1 + 1.", "    Else B[idx] = B2[idx2] and idx2 = idx2 + 1.", "    End If.", "    idx = idx + 1.", "  End While.", "  If idx1 > n/2 Then B[idx,…,n] = B2[idx2,…,n/2].", "  If idx2 > n/2 Then B[idx,…,n] = B1[idx1,…,n/2].", "  Return B."];
+/* generates merge steps; off = line offset of Merge code in the panel; base = extra state */
+function mergeSteps(b1, b2, off, push) {
+  const B = Array(b1.length + b2.length).fill(null);
+  let i1 = 0, i2 = 0, id = 0;
+  const st = (line, msg, x = {}) => push(line + off, msg, { m: { b1, b2, B: B.slice(), i1, i2, id, ...x } }, [["idx", id + 1], ["idx1", i1 + 1], ["idx2", i2 + 1]]);
+  st(1, `ממזגים את ${c(`[${b1}]`)} ו-${c(`[${b2}]`)}. שני האינדקסים מתחילים בהתחלה.`);
+  while (i1 < b1.length && i2 < b2.length) {
+    if (b1[i1] <= b2[i2]) {
+      B[id] = b1[i1];
+      st(3, `${c(`B1[${i1 + 1}] = ${b1[i1]} ≤ B2[${i2 + 1}] = ${b2[i2]}`)}, אז ${b1[i1]} נכנס ל-${c(`B[${id + 1}]`)} ו-${c("idx1")} מתקדם.`, { w: id, from: 1 });
+      i1++;
+    } else {
+      B[id] = b2[i2];
+      st(4, `${c(`B1[${i1 + 1}] = ${b1[i1]} > B2[${i2 + 1}] = ${b2[i2]}`)}, אז ${b2[i2]} נכנס ל-${c(`B[${id + 1}]`)} ו-${c("idx2")} מתקדם.`, { w: id, from: 2 });
+      i2++;
+    }
+    id++;
+  }
+  if (i1 >= b1.length) {
+    const rest = b2.slice(i2); rest.forEach(v => B[id++] = v);
+    st(8, rest.length ? `${c("B1")} נגמר, אז מעתיקים את מה שנשאר ב-${c("B2")} (${c(rest.join(", "))}) לסוף ${c("B")}.` : `שני המערכים נגמרו.`);
+  } else {
+    const rest = b1.slice(i1); rest.forEach(v => B[id++] = v);
+    st(9, `${c("B2")} נגמר, אז מעתיקים את מה שנשאר ב-${c("B1")} (${c(rest.join(", "))}) לסוף ${c("B")}.`);
+  }
+  st(10, `המיזוג הסתיים: ${c(`[${B}]`)}. כל איבר הועתק פעם אחת, ולכן זמן המיזוג הוא ${c("O(n)")}.`, { done: true });
+  return B;
+}
+function renderMerge(m) {
+  if (!m) return "";
+  const h1 = {}, h2 = {}, hb = {}, p1 = {}, p2 = {}, pb = {};
+  for (let k = 0; k < m.i1; k++) h1[k] = "dim";
+  for (let k = 0; k < m.i2; k++) h2[k] = "dim";
+  if (!m.done) {
+    if (m.i1 < m.b1.length) { h1[m.i1] = "cmp"; p1[m.i1] = "idx1"; }
+    if (m.i2 < m.b2.length) { h2[m.i2] = "cmp"; p2[m.i2] = "idx2"; }
+  }
+  m.B.forEach((v, k) => { if (v !== null) hb[k] = "ok"; });
+  if (m.w !== undefined) hb[m.w] = "sel";
+  if (!m.done && m.id < m.B.length) pb[m.id] = "idx";
+  return `<div class="two"><div>${arrRow({ label: "B1", vals: m.b1, base: 1, hl: h1, ptr: p1 })}</div><div>${arrRow({ label: "B2", vals: m.b2, base: 1, hl: h2, ptr: p2 })}</div></div>` + arrRow({ label: "B (תוצאת המיזוג)", vals: m.B, base: 1, hl: hb, ptr: pb });
+}
+algo({
+  id: "merge", topic: "03", name: "פעולת המיזוג (Merge)",
+  tag: "מאחדים שני מערכים ממוינים למערך ממוין אחד.", kw: "merge מיזוג", src: "הרצאה 3",
+  intro: `<b>מה זה?</b> תת-הרוטינה שמקבלת <b>שני מערכים ממוינים</b> ומחזירה מערך ממוין אחד שמכיל את כולם. מחזיקים שני אינדקסים, אחד לכל מערך. בכל צעד משווים את שני האיברים שהאינדקסים מצביעים עליהם, מעבירים את הקטן מביניהם לפלט, ומקדמים רק את האינדקס שלו.<br><b>זמן ריצה:</b> ${c("O(n)")}, כי כל איבר עובר לפלט פעם אחת.`,
+  code: MERGE_CODE,
+  legend: [["cmp","משווים"],["sel","נכתב עכשיו"],["ok","כבר בפלט"]],
+  inputs: [{ key: "b1", label: "B1 (ממוין)", def: "1, 4, 5, 24" }, { key: "b2", label: "B2 (ממוין)", def: "4, 10, 13, 66" }],
+  parse(i) {
+    const b1 = parseNums(i.b1, "מערך B1"), b2 = parseNums(i.b2, "מערך B2");
+    for (const [n, b] of [["B1", b1], ["B2", b2]]) for (let k = 1; k < b.length; k++) if (b[k] < b[k - 1]) throw `${n} צריך להיות ממוין מהקטן לגדול.`;
+    if (b1.length + b2.length > 14) throw "עד 14 איברים ביחד.";
+    return { b1, b2 };
+  },
+  run({ b1, b2 }) {
+    const S = [];
+    mergeSteps(b1, b2, 0, (line, msg, x, vars) => S.push({ line, msg, vars, ...x }));
+    S.unshift({ line: 0, msg: `קלט: שני מערכים ממוינים.`, m: { b1, b2, B: Array(b1.length + b2.length).fill(null), i1: 0, i2: 0, id: 0 } });
+    return S;
+  },
+  render(st) { return renderMerge(st.m); },
+});
+
+/* ---------- 03: MergeSort ---------- */
+const MERGEK_CODE = k => [`Merge(B1,…,B${k})`, `  idx = 1, idx1 = … = idx${k} = 1.`, "  While some Bj still has elements Do", "    Let j be the array with the smallest Bj[idxj].", "    B[idx] = Bj[idxj] and idxj = idxj + 1.", "    idx = idx + 1.", "  End While.", "  Return B."];
+function mergeStepsK(parts, off, push) {
+  const k = parts.length, B = [], ix = parts.map(() => 0);
+  const st = (line, msg, x = {}) => push(line + off, msg, { mk: { parts, ix: ix.slice(), B: B.concat(Array(parts.reduce((a, p) => a + p.length, 0) - B.length).fill(null)), ...x } }, [["idx", B.length + 1], ...parts.map((_, j) => [`idx${j + 1}`, ix[j] + 1])]);
+  st(1, `ממזגים ${k} מערכים ממוינים. לכל אחד יש אינדקס משלו.`);
+  while (parts.some((p, j) => ix[j] < p.length)) {
+    const live = parts.map((p, j) => j).filter(j => ix[j] < parts[j].length);
+    const j = live.reduce((a, b) => parts[b][ix[b]] < parts[a][ix[a]] ? b : a);
+    st(3, `משווים את האיברים הנוכחיים: ${c(live.map(t => parts[t][ix[t]]).join(", "))}. הקטן הוא ${c(parts[j][ix[j]])}, מ-${c("B" + (j + 1))}.${live.length > 1 ? ` (${live.length - 1} השוואות)` : ""}`, { cmp: live, win: j });
+    B.push(parts[j][ix[j]]); ix[j]++;
+    st([4, 5], `${c(parts[j][ix[j] - 1])} נכנס לפלט, ו-${c("idx" + (j + 1))} מתקדם.`, { w: B.length - 1 });
+  }
+  st(7, `המיזוג הסתיים: ${c(`[${B}]`)}. בכל צעד השווינו עד ${k} איברים, ולכן המיזוג עולה ${c(`O(${k}n)`)}.`, { done: true });
+  return B;
+}
+function renderMergeK(m) {
+  if (!m) return "";
+  const rows = m.parts.map((p, j) => {
+    const hl = {}, ptr = {};
+    for (let t = 0; t < m.ix[j]; t++) hl[t] = "dim";
+    if (!m.done && m.ix[j] < p.length) { hl[m.ix[j]] = m.win === j ? "sel" : ((m.cmp || []).includes(j) ? "cmp" : ""); ptr[m.ix[j]] = "idx" + (j + 1); }
+    return `<div>${arrRow({ label: "B" + (j + 1), vals: p, base: 1, hl, ptr })}</div>`;
+  }).join("");
+  const hb = {}; m.B.forEach((v, t) => { if (v !== null) hb[t] = "ok"; }); if (m.w !== undefined) hb[m.w] = "sel";
+  return `<div data-k="mk" style="display:grid;grid-template-columns:repeat(${m.parts.length},1fr);gap:8px;direction:ltr">${rows}</div>` + arrRow({ label: "B (תוצאת המיזוג)", vals: m.B, base: 1, hl: hb });
+}
+algo({
+  id: "mergesort", topic: "03", name: "מיון מיזוג (Merge Sort)",
+  tag: "מחלקים לחלקים, ממיינים כל חלק, וממזגים.", kw: "merge sort מיון מיזוג רקורסיה הפרד ומשול", src: "הרצאה 3",
+  intro: `<b>מה זה?</b> מיון רקורסיבי: מחלקים את המערך לחלקים (בהרצאה: לשני חצאים), ממיינים כל חלק בקריאה רקורסיבית, ובסוף <b>ממזגים</b> את החלקים הממוינים בעזרת ${c("Merge")}. מערך באורך 1 כבר ממוין, וזה תנאי העצירה.<br><b>בתמונה:</b> עץ הרקורסיה. כל מלבן הוא קריאה אחת, והשורה שלו היא העומק ברקורסיה.<br><b>זמן ריצה:</b> בפיצול ל-2: ${c("T(n) = 2T(n/2) + O(n) = O(n lg n)")}. בפיצול ל-k יש פחות רמות (${c("log_k n")}), אבל כל מיזוג משווה עד k איברים בכל צעד. נסו לשנות את הכפתור ולספור השוואות.`,
+  opts: [{ key: "k", label: "לפצל ל:", def: 2, choices: [[2, "2", "כמו בהרצאה"], [3, "3"], [4, "4"]] }],
+  code: o => o.k === 2 ? ["MergeSort(A[1,…,n])", "  If n = 1 Then Return A.", "  B1 = MergeSort(A[1, …, n/2]).", "  B2 = MergeSort(A[n/2+1, …, n]).", "  Return Merge(B1,B2).", "", ...MERGE_CODE]
+    : ["MergeSort(A[1,…,n])", "  If n = 1 Then Return A.", ...Array.from({ length: o.k }, (_, j) => `  B${j + 1} = MergeSort(A[${j === 0 ? "1" : (j === 1 ? "n/" + o.k : j + "n/" + o.k) + "+1"}, …, ${j === o.k - 1 ? "n" : (j === 0 ? "n/" + o.k : (j + 1) + "n/" + o.k)}]).`), `  Return Merge(${Array.from({ length: o.k }, (_, j) => "B" + (j + 1)).join(",")}).`, "", ...MERGEK_CODE(o.k), "", `// T(n) = ${o.k}T(n/${o.k}) + O(${o.k}n)`],
+  legend: [["cur","הקריאה שרצה"],["vis","מחכה לקריאה רקורסיבית"],["ok","כבר ממוין"]],
+  inputs: [{ key: "a", label: "המערך A", def: "5, 24, 4, 1, 13, 4, 10, 66", hint: "עד 12 מספרים. בהרצאה מניחים ש-n חזקה של 2, אבל זה עובד גם אחרת." }],
+  parse(i) { const a = parseNums(i.a, "מערך"); if (a.length > 12) throw "עד 12 מספרים."; return { a }; },
+  run(input) {
+    const { a } = input, K = input.__opt.k, S = [], nodes = [];
+    let comps = 0;
+    const push = (line, msg, x = {}, vars) => S.push({ line, msg, vars: [...(vars || []), ["השוואות עד עכשיו", comps]], nodes: clone(nodes), ...x });
+    const mergeOff = K + 4;
+    function ms(l, r, d) {
+      const node = { l, r, d, vals: a.slice(l, r + 1), st: "cur" }; nodes.push(node);
+      const k = nodes.length - 1;
+      const setCur = () => { nodes.forEach(nd => { if (nd.st === "cur") nd.st = "wait"; }); nodes[k].st = "cur"; };
+      setCur();
+      const n = r - l + 1;
+      push(0, `קריאה ל-${c("MergeSort")} על ${c(`[${node.vals}]`)} (עומק ${d} ברקורסיה).`, {}, [["n", n]]);
+      if (n === 1) { nodes[k].st = "done"; push(1, `${c("n = 1")}: מערך עם איבר אחד כבר ממוין, אז מחזירים אותו כמו שהוא.`, {}, [["n", 1]]); return nodes[k].vals; }
+      const p = Math.min(K, n), cuts = Array.from({ length: p + 1 }, (_, j) => l + Math.floor(j * n / p));
+      const bs = [];
+      for (let j = 0; j < p; j++) {
+        push(2 + j, j === 0 ? `${c(`n = ${n}`)}. מחלקים ל-${p} חלקים, וקודם ממיינים את הראשון ${c(`[${a.slice(cuts[0], cuts[1])}]`)}.` : `חזרנו עם ${c(`B${j} = [${bs[j - 1]}]`)}. עכשיו ממיינים את החלק ה-${j + 1}, ${c(`[${a.slice(cuts[j], cuts[j + 1])}]`)}.`, {}, [["n", n]]);
+        bs.push(ms(cuts[j], cuts[j + 1] - 1, d + 1)); setCur();
+      }
+      push(K + 2, `${p === 2 ? "שני החלקים" : `כל ${p} החלקים`} ממוינים, אז ממזגים אותם.`, {}, [["n", n]]);
+      let B;
+      if (K === 2) { B = mergeSteps(bs[0], bs[1], 6, (line, msg, x, vars) => { if (x.m && x.m.w !== undefined && !x.m.done) comps++; push(line, msg, x, vars); }); }
+      else B = mergeStepsK(bs, mergeOff, (line, msg, x, vars) => { if (x.mk && x.mk.cmp) comps += x.mk.cmp.length - 1; push(line, msg, x, vars); });
+      nodes[k].vals = B; nodes[k].st = "done";
+      push(K + 2, `${c("Merge")} החזיר ${c(`[${B}]`)}, וזה מה שהקריאה הזאת מחזירה.`, {}, [["n", n]]);
+      return B;
+    }
+    const res = ms(0, a.length - 1, 0);
+    push(-1, `<b>סיימנו!</b> המערך הממוין: ${c(`[${res}]`)}. סך הכול ${comps} השוואות במיזוגים${K === 2 ? "" : `. נסו את אותו מערך עם פיצול ל-2 ותשוו`}.`, {});
+    return S;
+  },
+  render(st) {
+    const n = st.nodes.length ? st.nodes[0].r + 1 : 0;
+    const CW = 46, RH = 62, maxD = Math.max(...st.nodes.map(x => x.d));
+    const w = n * CW + 10, h = (maxD + 1) * RH + 10;
+    let s = `<div data-k="mstree" style="position:relative;width:${w}px;height:${h}px;margin:0 auto;direction:ltr">`;
+    const col = { cur: ["--orange", "#fff"], wait: ["--cyan-t", "inherit"], done: ["--cyan", "#fff"] };
+    for (const nd of st.nodes) {
+      const [bg, fg] = col[nd.st];
+      s += `<div data-k="ms${nd.l}-${nd.r}" style="position:absolute;left:${nd.l * CW + 5}px;top:${nd.d * RH + 4}px;width:${(nd.r - nd.l + 1) * CW - 6}px;height:${RH - 20}px;background:var(${bg});color:${fg};border-radius:4px;transition:background .3s,color .3s;font-family:JetBrains Mono,monospace;display:flex;align-items:center;justify-content:space-around;font-weight:600;font-size:14px">${nd.vals.map(v => `<span>${esc(v)}</span>`).join("")}</div>`;
+    }
+    s += `</div>`;
+    const panel = st.m ? renderMerge(st.m) : st.mk ? renderMergeK(st.mk) : "";
+    return s + (panel ? `<div data-k="mpanel" style="border-top:2px dashed var(--line);margin-top:10px;padding-top:6px">${panel}</div>` : "");
+  },
+});
+function hswap(H, i, j) { [H.A[i], H.A[j]] = [H.A[j], H.A[i]]; if (H.id) [H.id[i], H.id[j]] = [H.id[j], H.id[i]]; }
+function hnew(A) { return { A: A.slice(), id: A.map((_, k) => k), next: A.length, last: A.length - 1 }; }
+function hpush(H, x) { H.last++; H.A[H.last] = x; H.id[H.last] = H.next++; }
+/* ---------- 04: Binary search ---------- */
+algo({
+  id: "binsearch", topic: "04", name: "חיפוש בינארי במערך ממוין",
+  tag: "בכל צעד מקטינים את החלק שמחפשים בו.", kw: "binary search חיפוש בינארי טרנרי ternary", src: null,
+  intro: `<b>מה זה?</b> חיפוש של ערך ${c("x")} במערך <b>ממוין</b>. מסתכלים על האיבר באמצע, ${c("A[n/2]")}. אם הוא ${c("x")}, סיימנו. אם הוא גדול מ-${c("x")}, אז ${c("x")} יכול להיות רק בחצי השמאלי, ואם הוא קטן, רק בחצי הימני. בכל צעד החלק קטן פי 2, ולכן ${c("O(lg n)")}.<br><b>וריאציה – חיפוש טרנרי:</b> בודקים שתי נקודות, בשליש ובשני שליש, וממשיכים בשליש אחד. יש פחות צעדים, ${c("log₃ n")}, אבל בכל צעד עד 2 השוואות. נסו להשוות את מספר ההשוואות.`,
+  opts: [{ key: "k", label: "לחלק ל:", def: 2, choices: [[2, "2", "בינארי"], [3, "3", "טרנרי"]] }],
+  code: o => o.k === 2 ? ["BinarySearch(A[1,…,n], x)", "  If n = 1 Then Return \"A[1]=x?\"", "  If A[n/2] = x Then Return Yes.", "  If A[n/2] > x Then Return BinarySearch(A[1,…,n/2], x).", "  If A[n/2] < x Then Return BinarySearch(A[n/2 + 1,…,n], x)."]
+    : ["TernarySearch(A[1,…,n], x)", "  If n ≤ 2 Then Return \"x ∈ A?\"", "  If A[n/3] = x or A[2n/3] = x Then Return Yes.", "  If x < A[n/3] Then Return TernarySearch(A[1,…,n/3-1], x).", "  If x > A[2n/3] Then Return TernarySearch(A[2n/3+1,…,n], x).", "  Return TernarySearch(A[n/3+1,…,2n/3-1], x)."],
+  legend: [["cmp","האיבר שבודקים"],["ok","נמצא"]],
+  inputs: [{ key: "a", label: "מערך ממוין A", def: "2, 5, 8, 12, 16, 23, 38, 56, 64, 72, 81, 90", hint: "עד 16 מספרים, מהקטן לגדול" }, { key: "x", label: "x (מה מחפשים)", def: "64", size: 6 }],
+  parse(i) {
+    const a = parseNums(i.a, "מערך"); if (a.length > 16) throw "עד 16 מספרים.";
+    for (let k = 1; k < a.length; k++) if (a[k] < a[k - 1]) throw "המערך צריך להיות ממוין מהקטן לגדול.";
+    const x = Number(i.x); if (!Number.isFinite(x)) throw "x צריך להיות מספר.";
+    return { a, x };
+  },
+  run(input) {
+    const { a, x } = input, K = input.__opt.k, S = []; let l = 0, r = a.length - 1, comps = 0;
+    const snap = (line, msg, ex = {}) => S.push({ line, msg, a, l, r, ...ex, vars: [["x", x], ["החלק", `A[${l + 1}…${r + 1}]`], ["השוואות", comps]] });
+    while (true) {
+      const n = r - l + 1;
+      snap(0, `מחפשים את ${c(x)} בחלק ${c(`A[${l + 1}…${r + 1}]`)}, שיש בו ${n} איברים.`);
+      if (K === 2) {
+        if (n === 1) { comps++; const ok = a[l] === x; snap(1, `נשאר איבר אחד, ${c(a[l])}. ${ok ? `הוא ${c(x)}: <b>מצאנו!</b>` : `הוא לא ${c(x)}: <b>${x} לא במערך.</b>`} סך הכול ${comps} השוואות.`, { mids: [l], found: ok }); break; }
+        const mid = l + Math.floor(n / 2) - 1; comps++;
+        if (a[mid] === x) { snap(2, `האיבר באמצע הוא ${c(a[mid])}: <b>מצאנו!</b> סך הכול ${comps} השוואות.`, { mids: [mid], found: true }); break; }
+        comps++;
+        if (a[mid] > x) { snap(3, `${c(a[mid])} גדול מ-${c(x)}, אז ממשיכים בחצי השמאלי.`, { mids: [mid] }); r = mid; }
+        else { snap(4, `${c(a[mid])} קטן מ-${c(x)}, אז ממשיכים בחצי הימני.`, { mids: [mid] }); l = mid + 1; }
+      } else {
+        if (n <= 0) { snap(1, `לא נשארו איברים, אז <b>${x} לא במערך.</b> סך הכול ${comps} השוואות.`); break; }
+        if (n <= 2) { const f = a.slice(l, r + 1).indexOf(x); comps += n; snap(1, `נשארו ${n} איברים, בודקים אותם ישירות. ${f >= 0 ? "<b>מצאנו!</b>" : `<b>${x} לא במערך.</b>`} סך הכול ${comps} השוואות.`, { mids: Array.from({ length: n }, (_, t) => l + t), found: f >= 0, fi: f >= 0 ? l + f : -1 }); break; }
+        const m1 = l + Math.floor(n / 3), m2 = l + Math.floor(2 * n / 3);
+        comps += 2;
+        if (a[m1] === x || a[m2] === x) { snap(2, `בודקים את ${c(a[m1])} ואת ${c(a[m2])}: אחד מהם הוא ${c(x)}. <b>מצאנו!</b> סך הכול ${comps} השוואות.`, { mids: [m1, m2], found: true, fi: a[m1] === x ? m1 : m2 }); break; }
+        comps++;
+        if (x < a[m1]) { snap(3, `${c(x)} קטן מ-${c(a[m1])}, אז ממשיכים בשליש הראשון.`, { mids: [m1, m2] }); r = m1 - 1; continue; }
+        comps++;
+        if (x > a[m2]) { snap(4, `${c(x)} גדול מ-${c(a[m2])}, אז ממשיכים בשליש האחרון.`, { mids: [m1, m2] }); l = m2 + 1; continue; }
+        snap(5, `${c(x)} בין ${c(a[m1])} ל-${c(a[m2])}, אז ממשיכים בשליש האמצעי.`, { mids: [m1, m2] }); l = m1 + 1; r = m2 - 1;
+        if (l > r) { snap(5, `השליש האמצעי ריק, אז <b>${x} לא במערך.</b> סך הכול ${comps} השוואות.`); break; }
+      }
+    }
+    return S;
+  },
+  render(st) {
+    const hl = {}, ptr = {};
+    st.a.forEach((_, k) => { if (k < st.l || k > st.r) hl[k] = "dim"; });
+    (st.mids || []).forEach((m, t) => { hl[m] = st.found && (st.fi === undefined || st.fi === m || st.mids.length === 1) ? "ok" : "cmp"; ptr[m] = st.mids.length === 1 ? "A[n/2]" : (st.mids.length === 2 && st.r - st.l > 1 ? (t ? "2n/3" : "n/3") : ""); });
+    return arrRow({ label: "A", vals: st.a, base: 1, hl, ptr });
+  },
+});
+
+/* ---------- BST helpers ---------- */
+function bstNew() { return { root: null, N: {}, next: 0 }; }
+function bstAddNode(t, key) { const id = String(t.next++); t.N[id] = { key, l: null, r: null }; return id; }
+function bstBuild(keys) {
+  const t = bstNew();
+  for (const k of keys) {
+    if (t.root === null) { t.root = bstAddNode(t, k); continue; }
+    let x = t.root;
+    while (true) {
+      const nd = t.N[x];
+      if (k === nd.key) break;
+      const side = k < nd.key ? "l" : "r";
+      if (nd[side] === null) { nd[side] = bstAddNode(t, k); break; }
+      x = nd[side];
+    }
+  }
+  return t;
+}
+function bstInorder(t) { const out = []; (function w(x) { if (x === null) return; w(t.N[x].l); out.push(t.N[x].key); w(t.N[x].r); })(t.root); return out; }
+const bstInputs = (def, q, qdef) => [{ key: "keys", label: "בונים את העץ מהכנסה של", def, hint: "המספרים נכנסים לפי הסדר. ברירת המחדל בונה את העץ מהרצאה 4." }, ...(q ? [{ key: "q", label: q, def: qdef, size: 10 }] : [])];
+function bstParse(i, needQ) {
+  const keys = parseNums(i.keys, "מספרים להכנסה"); if (keys.length > 14) throw "עד 14 מספרים.";
+  const out = { keys };
+  if (needQ) out.q = parseNums(i.q, "ערך");
+  return out;
+}
+
+/* search path generator: yields steps, returns {x, parent, side} */
+function bstSearchSteps(t, q, push, lines) {
+  let x = t.root; const path = [];
+  while (true) {
+    path.push(x);
+    const nd = t.N[x];
+    const hl = {}; path.forEach(p => hl[p] = "vis"); hl[x] = "cur";
+    if (nd.key === q) { hl[x] = "sel"; push(lines.eq, `${c(`x.key = ${nd.key}`)} שווה ל-${c(`query = ${q}`)}. מצאנו את הצומת.`, hl); return { x, path }; }
+    const side = q < nd.key ? "l" : "r";
+    const dir = side === "l" ? "שמאלה" : "ימינה";
+    if (nd[side] === null) {
+      push(side === "l" ? lines.noL : lines.noR, `${c(`x.key = ${nd.key}`)} ${side === "l" ? ">" : "<"} ${c(q)}, אז צריך ללכת ${dir}, אבל אין שם בן. כלומר ${c(q)} לא נמצא בעץ.`, hl);
+      return { x: null, parent: x, side, path };
+    }
+    push(side === "l" ? lines.goL : lines.goR, `${c(`x.key = ${nd.key}`)} ${side === "l" ? "גדול מ" : "קטן מ"}-${c(q)}, אז ${c(q)} יכול להיות רק בתת-העץ ה${side === "l" ? "שמאלי" : "ימני"}. ממשיכים ${dir}.`, hl);
+    x = nd[side];
+  }
+}
+
+algo({
+  id: "bstsearch", topic: "04", name: "חיפוש בעץ חיפוש בינארי",
+  tag: "יורדים מהשורש: שמאלה אם קטן, ימינה אם גדול.", kw: "bst search עץ חיפוש בינארי", src: "הרצאה 4, שקף 12",
+  intro: `<b>מה זה עץ חיפוש בינארי?</b> עץ שבו לכל צומת ${c("x")}: כל הערכים בתת-העץ השמאלי קטנים מ-${c("x.key")}, וכל הערכים בתת-העץ הימני גדולים ממנו.<br><b>החיפוש:</b> מתחילים בשורש ומשווים. אם ${c("query")} קטן יותר הולכים שמאלה, ואם גדול יותר הולכים ימינה. מספר ההשוואות הוא לכל היותר גובה העץ, ולכן זמן הריצה הוא ${c("O(height)")}.`,
+  code: ["Search(x, query)", "  If x.key = query Then Return YES.", "  If x.key > query Then", "    If x.left ≠ ∅ Then Search(x.left, query).", "    Else Return NO.", "  Endif.", "  If x.key < query Then", "    If x.right ≠ ∅ Then Search(x.right, query).", "    Else Return NO.", "  Endif."],
+  legend: [["cur","הצומת הנוכחי"],["vis","המסלול"],["sel","נמצא"]],
+  inputs: bstInputs("5, 4, 7, 2, 1, 3, 6, 9, 8", "query (מה מחפשים)", "6"),
+  parse(i) { const o = bstParse(i, true); o.q = o.q[0]; return o; },
+  run({ keys, q }) {
+    const t = bstBuild(keys), S = [];
+    S.push({ line: -1, msg: `זה העץ שנבנה מהקלט. מחפשים את ${c(q)}, ומתחילים בשורש.`, t, hl: {} });
+    const res = bstSearchSteps(t, q, (line, msg, hl) => S.push({ line, msg, t, hl: clone(hl), vars: [["query", q]] }), { eq: 1, goL: 3, noL: 4, goR: 7, noR: 8 });
+    S.push({ line: res.x !== null ? 1 : (res.side === "l" ? 4 : 8), msg: res.x !== null ? `<b>התשובה: YES.</b> עברנו על ${res.path.length} צמתים, וזה לכל היותר גובה העץ.` : `<b>התשובה: NO.</b> עברנו על ${res.path.length} צמתים.`, t, hl: Object.fromEntries(res.path.map(p => [p, "vis"]).concat(res.x !== null ? [[res.x, "sel"]] : [])) });
+    return S;
+  },
+  render(st) { return drawBST(st.t, st.hl); },
+});
+
+algo({
+  id: "bstinsert", topic: "04", name: "הכנסה לעץ חיפוש בינארי",
+  tag: "מחפשים את הערך, ויוצרים אותו במקום שבו החיפוש נעצר.", kw: "bst insert הכנסה עץ חיפוש", src: "הרצאה 4, שקף 12",
+  intro: `<b>מה זה?</b> הכנסה של ערך חדש לעץ חיפוש בינארי, כך שהעץ נשאר עץ חיפוש. מחפשים את הערך כמו בחיפוש רגיל. אם הוא כבר בעץ, לא עושים כלום. אחרת החיפוש נעצר בצומת ${c("x")} שאין לו בן בכיוון שצריך ללכת אליו, ושם יוצרים צומת חדש.<br><b>זמן ריצה:</b> ${c("O(height)")}.`,
+  codeHe: true,
+  code: ["הכנסת איבר עם ערך query:", "1. מתחילים בחיפוש query בעץ.", "2. אם query נמצא בעץ – אין צורך לעשות כלום.", "3. אם `x.key > query` וגם `x.left = ∅` –", "    יוצרים צומת חדש `y`, בן שמאלי של `x`, עם ערך `query`.", "4. אם `x.key < query` וגם `x.right = ∅` –", "    יוצרים צומת חדש `y`, בן ימני של `x`, עם ערך `query`."],
+  legend: [["cur","משווים אליו"],["vis","מסלול החיפוש"],["sel","הצומת החדש"]],
+  inputs: [{ key: "keys", label: "סדרת הכנסות (לעץ ריק)", def: "5, 4, 7, 2, 1, 3, 6, 9, 8", hint: "עד 14 מספרים" }],
+  parse(i) { return bstParse(i, false); },
+  run({ keys }) {
+    const t = bstNew(), S = [];
+    S.push({ line: 0, msg: `מתחילים מעץ ריק ומכניסים ${keys.length} ערכים לפי הסדר.`, t: clone(t), hl: {} });
+    for (const k of keys) {
+      if (t.root === null) { t.root = bstAddNode(t, k); S.push({ line: 0, msg: `הכנסת ${c(k)}: העץ ריק, אז ${k} הופך לשורש.`, t: clone(t), hl: { [t.root]: "sel" } }); continue; }
+      S.push({ line: 1, msg: `הכנסת ${c(k)}: קודם מחפשים את ${k} בעץ.`, t: clone(t), hl: {}, vars: [["query", k]] });
+      const res = bstSearchSteps(t, k, (line, msg, hl) => S.push({ line, msg, t: clone(t), hl: clone(hl), vars: [["query", k]] }), { eq: 2, goL: 1, noL: 3, goR: 1, noR: 5 });
+      if (res.x !== null) { S.push({ line: 2, msg: `${k} כבר בעץ, אז לא עושים כלום.`, t: clone(t), hl: { [res.x]: "sel" } }); continue; }
+      const id = bstAddNode(t, k); t.N[res.parent][res.side] = id;
+      const hl = {}; res.path.forEach(p => hl[p] = "vis"); hl[id] = "sel";
+      S.push({ line: res.side === "l" ? [3, 4] : [5, 6], msg: `יוצרים צומת חדש עם ${c(k)} כבן ${res.side === "l" ? "שמאלי" : "ימני"} של ${c(t.N[res.parent].key)}.`, t: clone(t), hl, vars: [["query", k]] });
+    }
+    S.push({ line: -1, msg: `<b>סיימנו את כל ההכנסות.</b> סריקה לפי הסדר (InOrder) נותנת ${c(bstInorder(t).join(", "))}, כלומר ממוין, כמו שצריך בעץ חיפוש.`, t: clone(t), hl: {} });
+    return S;
+  },
+  render(st) { return drawBST(st.t, st.hl); },
+});
+
+algo({
+  id: "bstdelete", topic: "04", name: "הוצאה מעץ חיפוש בינארי",
+  tag: "שלושה מקרים: עלה, ילד יחיד, או שני ילדים.", kw: "bst delete הוצאה מחיקה עוקב עץ חיפוש", src: "הרצאה 4, שקף 12",
+  intro: `<b>מה זה?</b> מחיקה של ערך מעץ חיפוש, כך שהעץ נשאר עץ חיפוש. קודם מוצאים את הצומת ${c("x")} עם הערך, ואז יש שלושה מקרים:<br>1. ל-${c("x")} אין ילדים: פשוט מוחקים אותו.<br>2. ל-${c("x")} יש ילד יחיד: הילד עולה למקומו.<br>3. ל-${c("x")} יש שני ילדים: מוצאים את ${c("y")}, הערך הקטן ביותר בתת-העץ הימני, שהוא הערך הבא בתור אחרי ${c("x")}. מעתיקים את הערך של ${c("y")} לתוך ${c("x")} ומוחקים את ${c("y")}. ל-${c("y")} אין בן שמאלי, אז המחיקה שלו היא מקרה 1 או 2.<br><b>זמן ריצה:</b> ${c("O(height)")}.`,
+  codeHe: true,
+  code: ["הוצאת איבר עם ערך query:", "1. מתחילים בחיפוש query בעץ.", "2. אם query לא נמצא בעץ – אין צורך לעשות כלום.", "3. ל-x אין ילדים (x עלה): פשוט מוחקים את x מהעץ.", "4. ל-x יש ילד יחיד y: מוחקים את x ושמים את y במקומו.", "5. ל-x יש שני ילדים:", "    מוצאים את y – הצומת בעל הערך המינימלי בתת-העץ הימני של x.", "    (ל-y אין בן שמאלי.)", "    רושמים את הערך של y בצומת x, ומוחקים את y."],
+  legend: [["cur","משווים אליו"],["sel","נמחק / משתנה"],["cmp","המינימום בתת-העץ הימני"]],
+  inputs: bstInputs("5, 4, 7, 2, 1, 3, 6, 9, 8", "מה מוציאים (אפשר כמה)", "1, 4, 5"),
+  parse(i) { return bstParse(i, true); },
+  run({ keys, q }) {
+    const t = bstBuild(keys), S = [];
+    S.push({ line: -1, msg: `זה העץ שנבנה מהקלט. נוציא ממנו לפי הסדר: ${c(q.join(", "))}.`, t: clone(t), hl: {} });
+    const parentOf = id => { for (const p in t.N) if (t.N[p].l === id || t.N[p].r === id) return p; return null; };
+    const replace = (id, ch) => { const p = parentOf(id); if (p === null) t.root = ch; else if (t.N[p].l === id) t.N[p].l = ch; else t.N[p].r = ch; delete t.N[id]; };
+    for (const k of q) {
+      if (t.root === null) { S.push({ line: 2, msg: `העץ ריק, אין מה להוציא.`, t: clone(t), hl: {} }); break; }
+      S.push({ line: 1, msg: `הוצאת ${c(k)}: קודם מחפשים את ${k} בעץ.`, t: clone(t), hl: {}, vars: [["query", k]] });
+      const res = bstSearchSteps(t, k, (line, msg, hl) => S.push({ line, msg, t: clone(t), hl: clone(hl), vars: [["query", k]] }), { eq: 1, goL: 1, noL: 2, goR: 1, noR: 2 });
+      if (res.x === null) { S.push({ line: 2, msg: `${k} לא נמצא בעץ, אז אין מה להוציא.`, t: clone(t), hl: {} }); continue; }
+      const x = res.x, nd = t.N[x];
+      if (nd.l === null && nd.r === null) {
+        S.push({ line: 3, msg: `ל-${c(k)} אין ילדים, הוא עלה. פשוט מוחקים אותו.`, t: clone(t), hl: { [x]: "sel" } });
+        replace(x, null);
+        S.push({ line: 3, msg: `${c(k)} נמחק.`, t: clone(t), hl: {} });
+      } else if (nd.l === null || nd.r === null) {
+        const ch = nd.l !== null ? nd.l : nd.r;
+        S.push({ line: 4, msg: `ל-${c(k)} יש ילד יחיד, ${c(t.N[ch].key)}. מוחקים את ${k} והילד עולה למקומו, יחד עם כל תת-העץ שלו.`, t: clone(t), hl: { [x]: "sel", [ch]: "cmp" } });
+        replace(x, ch);
+        S.push({ line: 4, msg: `${c(k)} נמחק, ו-${c(t.N[ch].key)} תפס את מקומו.`, t: clone(t), hl: { [ch]: "cmp" } });
+      } else {
+        S.push({ line: 5, msg: `ל-${c(k)} יש שני ילדים. צריך למצוא את הערך הבא בתור אחריו: המינימום בתת-העץ הימני.`, t: clone(t), hl: { [x]: "sel" } });
+        let y = nd.r; const path = [];
+        while (true) {
+          path.push(y);
+          const hl = { [x]: "sel" }; path.forEach(p => hl[p] = "vis"); hl[y] = "cur";
+          if (t.N[y].l === null) break;
+          S.push({ line: 6, msg: `${c(t.N[y].key)} יש בן שמאלי, אז יש ערך קטן ממנו. ממשיכים שמאלה.`, t: clone(t), hl });
+          y = t.N[y].l;
+        }
+        S.push({ line: [6, 7], msg: `ל-${c(t.N[y].key)} אין בן שמאלי, אז הוא המינימום בתת-העץ הימני. זה ${c("y")}.`, t: clone(t), hl: { [x]: "sel", [y]: "cmp" } });
+        const yk = t.N[y].key; nd.key = yk;
+        S.push({ line: 8, msg: `רושמים את ${c(yk)} בצומת של ${c(k)}. העץ עדיין עץ חיפוש, כי ${yk} גדול מכל מה שמשמאל וקטן מכל מה שנשאר מימין.`, t: clone(t), hl: { [x]: "sel", [y]: "cmp" } });
+        replace(y, t.N[y].r);
+        S.push({ line: 8, msg: `מוחקים את הצומת הישן של ${c(yk)}. היה לו לכל היותר בן אחד (ימני), והבן הזה עלה למקומו.`, t: clone(t), hl: { [x]: "sel" } });
+      }
+    }
+    S.push({ line: -1, msg: `<b>סיימנו.</b> סריקה לפי הסדר (InOrder) נותנת ${c(bstInorder(t).join(", ") || "∅")}, כלומר עדיין ממוין.`, t: clone(t), hl: {} });
+    return S;
+  },
+  render(st) { return drawBST(st.t, st.hl); },
+});
+
+algo({
+  id: "inorder", topic: "04", name: "סריקה של עץ חיפוש (InOrder)",
+  tag: "שמאל, צומת, ימין: מדפיס את העץ בסדר ממוין.", kw: "inorder סריקה תוכי עץ", src: "הרצאה 4, שקף 12",
+  intro: `<b>מה זה?</b> מעבר על כל הצמתים בעץ לפי הסדר: קודם כל תת-העץ השמאלי, אחר כך הצומת עצמו, ובסוף כל תת-העץ הימני. בעץ חיפוש זה מדפיס את כל הערכים <b>בסדר ממוין</b>.<br><b>זמן ריצה:</b> ${c("O(n)")}, כי יש קריאה רקורסיבית אחת לכל צומת.`,
+  code: ["InOrder(x)", "  If x.left ≠ ∅ Then InOrder(x.left).", "  Print x.key.", "  If x.right ≠ ∅ Then InOrder(x.right)."],
+  legend: [["cur","הקריאה שרצה"],["vis","במחסנית"],["done","כבר הודפס"]],
+  inputs: bstInputs("5, 4, 7, 2, 1, 3, 6, 9, 8"),
+  parse(i) { return bstParse(i, false); },
+  run({ keys }) {
+    const t = bstBuild(keys), S = [], out = [], stack = [], printed = new Set();
+    const snap = (line, msg) => {
+      const hl = {}; printed.forEach(p => hl[p] = "done"); stack.forEach(p => { if (!printed.has(p)) hl[p] = "vis"; }); hl[stack[stack.length - 1]] = "cur";
+      S.push({ line, msg, t, hl, out: out.slice(), vars: [["מחסנית", stack.map(s => t.N[s].key).join(" → ")]] });
+    };
+    (function rec(x) {
+      stack.push(x); const nd = t.N[x];
+      snap(0, `${c(`InOrder(${nd.key})`)}.`);
+      if (nd.l !== null) { snap(1, `ל-${nd.key} יש בן שמאלי, אז קודם סורקים את כל תת-העץ השמאלי.`); rec(nd.l); }
+      out.push(nd.key); printed.add(x);
+      snap(2, `מדפיסים ${c(nd.key)}${nd.l !== null ? ", אחרי שכל מה שמשמאלו כבר הודפס" : ""}.`);
+      if (nd.r !== null) { snap(3, `עכשיו סורקים את תת-העץ הימני של ${nd.key}.`); rec(nd.r); }
+      stack.pop();
+    })(t.root);
+    S.push({ line: -1, msg: `<b>סיימנו.</b> הפלט ${c(out.join(", "))} ממוין.`, t, hl: Object.fromEntries([...printed].map(p => [p, "done"])), out });
+    return S;
+  },
+  render(st) { return drawBST(st.t, st.hl) + `<div style="margin-top:8px"><div style="font-size:13px;color:var(--muted)">פלט:</div><div class="listbox">${st.out.map(v => `<span>${v}</span>`).join("") || "<em>(עוד לא הודפס כלום)</em>"}</div></div>`; },
+});
+
+/* ---------- 05: heaps ---------- */
+let HP = { d: 2, mx: false };
+const lecHeap = () => HP.d === 2 && !HP.mx;
+const better = (a, b) => HP.mx ? a > b : a < b;
+const W_ = () => HP.mx ? { sm: "גדול", op: ">", mm: "המקסימום", m: "max", sml: "הגדול" } : { sm: "קטן", op: "<", mm: "המינימום", m: "min", sml: "הקטן" };
+const HUf = o => ["HeapifyUp(i)", "  If i=0 Then Return", `  If A[i] ${o.mx ? ">" : "<"} A[(i-1)/${o.d}] Then`, `    Swap(i,(i-1)/${o.d}).`, `    HeapifyUp((i-1)/${o.d}).`, "  End If"];
+const HDg = o => ["HeapifyDown(i)", `  c = the ${o.mx ? "largest" : "smallest"} child of i among A[${o.d}i+1 … ${o.d}i+${o.d}].`, `  If c exists and A[c] ${o.mx ? ">" : "<"} A[i] Then`, "    Swap(i,c).", "    HeapifyDown(c).", "  End If"];
+const HDl = ["HeapifyDown(i)", "  If (2i+1 ≤ last), (A[2i+1] ≤ A[2i+2]) and (A[2i+1] < A[i]) Then", "    Swap(i,2i+1).", "    HeapifyDown(2i+1).", "  End If", "  If (2i+2 ≤ last), (A[2i+2] < A[2i+1]) and (A[2i+2] < A[i]) Then", "    Swap(i,2i+2).", "    HeapifyDown(2i+2).", "  End If"];
+const PUSH = ["Push(x)", "  last = last+1.", "  A[last] = x.", "  HeapifyUp(last)."];
+const HDf = o => o.d === 2 && !o.mx ? HDl : HDg(o);
+const POPf = o => { const m = o.mx ? "max" : "min"; return ["Pop()", `  ${m} = A[0].`, "  Swap(0,last).", "  last = last -1.", "  HeapifyDown(0).", `  Return ${m}.`]; };
+const HOPTS = [{ key: "d", label: "ילדים לכל צומת:", def: 2, choices: [[2, "2", "כמו בהרצאה"], [3, "3"], [4, "4"]] }, { key: "mx", label: "סוג:", def: false, choices: [[false, "ערימת מינימום", "כמו בהרצאה"], [true, "ערימת מקסימום"]] }];
+const hopt = o => ({ d: o.d || 2, mx: !!o.mx });
+function codeWith(blocks) { const code = [], off = {}; for (const [name, b] of blocks) { if (code.length) code.push(""); off[name] = code.length; code.push(...b); } return { code, off }; }
+
+function heapUp(H, i, off, push) {
+  while (true) {
+    if (i === 0) { push(off + 1, `${c("i = 0")}: הגענו לשורש, עוצרים.`, { i }); return; }
+    const p = Math.floor((i - 1) / HP.d), w = W_();
+    if (better(H.A[i], H.A[p])) {
+      push(off + 2, `${c(`A[${i}] = ${H.A[i]}`)} ${w.sm} מהאבא שלו ${c(`A[${p}] = ${H.A[p]}`)}, אז תכונת הסדר לא מתקיימת.`, { i, cmp: [p] });
+      hswap(H, i, p);
+      push(off + 3, `מחליפים ביניהם. עכשיו ${H.A[p]} במקום ${p}, וממשיכים לבדוק ממנו למעלה.`, { i: p, cmp: [i], swapped: true });
+      i = p;
+    } else {
+      push(off + 2, `${c(`A[${i}] = ${H.A[i]}`)} לא ${w.sm} מהאבא שלו ${c(`A[${p}] = ${H.A[p]}`)}, אז הכול תקין ועוצרים.`, { i, cmp: [p] });
+      return;
+    }
+  }
+}
+function heapDown(H, i, off, push) {
+  if (!lecHeap()) return heapDownG(H, i, off, push);
+  while (true) {
+    const l = 2 * i + 1, r = 2 * i + 2, last = H.last;
+    const Al = l <= last ? H.A[l] : INF, Ar = r <= last ? H.A[r] : INF;
+    if (l > last) { push(off + 1, `לצומת ${i} (ערך ${H.A[i]}) אין ילדים, כי ${c(`2i+1 = ${l} > last = ${last}`)}. אין מה לפעפע, עוצרים.`, { i }); return; }
+    const rTxt = r <= last ? `${c(`A[${r}] = ${Ar}`)}` : `אין ילד ימני (${c("∞")})`;
+    if (Al <= Ar && Al < H.A[i]) {
+      push(off + 1, `הילדים של ${c(`A[${i}] = ${H.A[i]}`)}: ${c(`A[${l}] = ${Al}`)} ו-${rTxt}. הילד השמאלי הוא הקטן, והוא קטן מ-${H.A[i]}, אז מחליפים איתו.`, { i, cmp: [l, r].filter(x => x <= last) });
+      hswap(H, i, l);
+      push(off + 2, `החלפנו: ${H.A[i]} עלה, ו-${H.A[l]} ירד למקום ${l}. ממשיכים לפעפע ממנו למטה.`, { i: l, cmp: [i], swapped: true });
+      i = l; continue;
+    }
+    if (r <= last && Ar < Al && Ar < H.A[i]) {
+      push(off + 5, `הילדים של ${c(`A[${i}] = ${H.A[i]}`)}: ${c(`A[${l}] = ${Al}`)} ו-${c(`A[${r}] = ${Ar}`)}. הילד הימני הוא הקטן, והוא קטן מ-${H.A[i]}, אז מחליפים איתו.`, { i, cmp: [l, r] });
+      hswap(H, i, r);
+      push(off + 6, `החלפנו: ${H.A[i]} עלה, ו-${H.A[r]} ירד למקום ${r}. ממשיכים לפעפע ממנו למטה.`, { i: r, cmp: [i], swapped: true });
+      i = r; continue;
+    }
+    push([off + 1, off + 5], `הילדים של ${c(`A[${i}] = ${H.A[i]}`)}: ${c(`A[${l}] = ${Al}`)} ו-${rTxt}. אף אחד מהם לא קטן מ-${H.A[i]}, אז הכול תקין ועוצרים.`, { i, cmp: [l, r].filter(x => x <= last) });
+    return;
+  }
+}
+function heapDownG(H, i, off, push) {
+  const w = W_();
+  while (true) {
+    const kids = []; for (let t = 1; t <= HP.d; t++) { const ch = HP.d * i + t; if (ch <= H.last) kids.push(ch); }
+    if (!kids.length) { push(off + 1, `לצומת ${i} (ערך ${H.A[i]}) אין ילדים. אין מה לפעפע, עוצרים.`, { i }); return; }
+    const cc = kids.reduce((a, b) => better(H.A[b], H.A[a]) ? b : a);
+    push(off + 1, `הילדים של ${c(`A[${i}] = ${H.A[i]}`)}: ${c(kids.map(k => H.A[k]).join(", "))}. ה${w.sm === "קטן" ? "קטן" : "גדול"} מביניהם הוא ${c(`A[${cc}] = ${H.A[cc]}`)}.`, { i, cmp: kids });
+    if (!better(H.A[cc], H.A[i])) { push(off + 2, `${c(H.A[cc])} לא ${w.sm} מ-${c(H.A[i])}, אז הכול תקין ועוצרים.`, { i, cmp: [cc] }); return; }
+    push(off + 2, `${c(H.A[cc])} ${w.sm} מ-${c(H.A[i])}, אז מחליפים ביניהם.`, { i, cmp: [cc] });
+    hswap(H, i, cc);
+    push([off + 3, off + 4], `החלפנו: ${H.A[i]} עלה, ו-${H.A[cc]} ירד למקום ${cc}. ממשיכים לפעפע ממנו למטה.`, { i: cc, cmp: [i], swapped: true });
+    i = cc;
+  }
+}
+function heapRender(st) {
+  const hl = {};
+  for (let k = 0; k <= st.H.last; k++) hl[k] = "";
+  (st.cmp || []).forEach(k => hl[k] = "cmp");
+  if (st.i !== undefined && st.i <= st.H.last) hl[st.i] = st.swapped ? "sel" : "cur";
+  (st.okIdx || []).forEach(k => hl[k] = "done");
+  const vals = st.H.A.slice(0, Math.max(st.H.last + 1, st.showLen || 0));
+  const ah = {}, ap = {};
+  for (let k = 0; k < vals.length; k++) { if (k > st.H.last) ah[k] = "dim"; else if (hl[k] === "cmp") ah[k] = "cmpp"; else if (hl[k] === "cur") ah[k] = "cur"; else if (hl[k] === "sel") ah[k] = "sel"; else if (hl[k] === "done") ah[k] = "ok"; }
+  if (st.H.last >= 0) ap[st.H.last] = "last";
+  if (st.i !== undefined && st.i <= st.H.last) ap[st.i] = (ap[st.i] ? ap[st.i] + ",i" : "i");
+  let s = drawHeapTree(st.H.A, st.H.last, hl, st.H.id, 620, st.d || 2) + arrRow({ label: "המערך A", vals, base: 0, hl: ah, ptr: ap });
+  if (st.B) s += arrRow({ label: "B (הפלט)", vals: st.B, base: 1, hl: Object.fromEntries(st.B.map((v, k) => [k, v === null ? "" : "ok"])) });
+  if (st.extra) s += st.extra;
+  return s;
+}
+const heapLegend = [["cur", "הצומת i"], ["cmp", "משווים אליו"], ["sel", "אחרי החלפה"]];
+
+{
+  const blocks = o => codeWith([["push", PUSH], ["hu", HUf(o)], ["pop", POPf(o)], ["hd", HDf(o)]]);
+  algo({
+    id: "heapops", opts: HOPTS, code: o => blocks(hopt(o)).code, topic: "05", name: "הכנסה והוצאת מינימום (Push / Pop)",
+  tag: "הכנסה מפעפעת למעלה, הוצאת מינימום מפעפעת למטה.", kw: "heap push pop heapify ערימה פעפוע הכנסה הוצאה מינימום", src: null,
+    intro: `<b>מה זו ערימת מינימום?</b> עץ בינארי "צפוף", שכל הרמות בו מלאות חוץ מהתחתונה, והיא מתמלאת משמאל לימין. בנוסף, כל אבא קטן או שווה לילדים שלו, ולכן המינימום תמיד בשורש. שומרים את העץ במערך: הילדים של ${c("i")} הם ${c("2i+1")} ו-${c("2i+2")}, והאבא הוא ${c("(i-1)/2")}.<br><b>Push:</b> שמים את האיבר החדש בסוף ומפעפעים אותו <b>למעלה</b>. <b>Pop:</b> מוציאים את השורש, מעבירים את האחרון לשורש ומפעפעים אותו <b>למטה</b>, תמיד עם הילד הקטן. שתי הפעולות עולות ${c("O(lg n)")}.`,
+    legend: heapLegend,
+    inputs: [{ key: "h", label: "ערימה התחלתית (מערך)", def: "3, 4, 6, 5, 7, 8", hint: "אפשר להשאיר ריק" }, { key: "ops", label: "פעולות", def: "2, 5, pop, pop", hint: `מספר = ${c("Push")} של המספר. ${c("pop")} = הוצאת מינימום.` }],
+    parse(i, o) {
+      HP = hopt(o);
+      const A = String(i.h).trim() ? parseNums(i.h, "ערימה") : [];
+      let fixed = false;
+      for (let k = 1; k < A.length; k++) if (better(A[k], A[Math.floor((k - 1) / HP.d)])) fixed = true;
+      if (fixed) { const H0 = hnew(A); for (let k = A.length - 1; k >= 0; k--) heapDown(H0, k, 0, () => {}); A.splice(0, A.length, ...H0.A); }
+      const ops = String(i.ops).split(/[\s,;]+/).filter(Boolean).map(t => /^(pop|הוצא|הוצאה)$/i.test(t) ? "pop" : (Number.isFinite(Number(t)) ? Number(t) : (() => { throw `לא הבנתי את הפעולה "${esc(t)}".`; })()));
+      if (!ops.length) throw "צריך לפחות פעולה אחת.";
+      if (A.length + ops.filter(o => o !== "pop").length > 15) throw "עד 15 איברים בערימה.";
+      return { A, ops, fixed };
+    },
+    run(input) {
+      const { A, ops } = input; HP = hopt(input.__opt); const { off } = blocks(HP), w = W_();
+      const H = hnew(A), S = [], popped = [];
+      const push = (line, msg, x = {}) => S.push({ line, msg, H: clone(H), d: HP.d, ...x, extra: popped.length ? `<div style="font-size:13px;color:var(--muted)">הוצאנו עד עכשיו: <span class="ltr">${popped.join(", ")}</span></div>` : "", vars: [["last", H.last], ...(x.i !== undefined ? [["i", x.i]] : [])] });
+      push(-1, `${input.fixed ? "המערך שנתתם הוא לא ערימה מהסוג שבחרתם, אז קודם סידרנו אותו לערימה (בשיטת Floyd). " : "זו הערימה ההתחלתית. "}${w.mm} נמצא בשורש.`);
+      for (const op of ops) {
+        if (op === "pop") {
+          if (H.last < 0) { push(off.pop, `הערימה ריקה, אי אפשר להוציא.`); continue; }
+          const mn = H.A[0];
+          push(off.pop + 1, `${c("Pop()")}: ${w.mm} הוא השורש, ${c(`${w.m} = A[0] = ${mn}`)}.`, { i: 0 });
+          hswap(H, 0, H.last);
+          push(off.pop + 2, `מחליפים את השורש עם האיבר האחרון ${c(`A[${H.last}]`)}, כדי שהעץ יישאר צפוף.`, { i: 0, cmp: [H.last], swapped: true });
+          H.last--; popped.push(mn); H.A.length = H.last + 1; H.id.length = H.last + 1;
+          push(off.pop + 3, `מקטינים את ${c("last")}, ו-${mn} כבר לא בערימה. עכשיו בשורש יש ${c(fmt(H.A[0]))}, שאולי לא במקום הנכון.`, { i: 0 });
+          if (H.last >= 0) heapDown(H, 0, off.hd, push);
+          push(off.pop + 5, `${c("Pop")} מחזיר ${c(mn)}.`);
+        } else {
+          hpush(H, op);
+          push([off.push + 1, off.push + 2], `${c(`Push(${op})`)}: שמים את ${op} בסוף המערך, ${c(`A[${H.last}]`)}, כלומר במקום הפנוי הבא ברמה התחתונה.`, { i: H.last });
+          heapUp(H, H.last, off.hu, push);
+        }
+      }
+      push(-1, `<b>סיימנו את כל הפעולות.</b> ${H.last >= 0 ? `${w.mm} עכשיו הוא ${c(H.A[0])}.` : "הערימה ריקה."}`);
+      return S;
+    },
+    render: heapRender,
+  });
+}
+{
+  const blocks = o => codeWith([["b", ["BuildWilliams(x1,…,xn)", "  For j = 1 … n Do", "    Push(xj).", "  End For"]], ["push", PUSH], ["hu", HUf(o)]]);
+  algo({
+    id: "williams", opts: HOPTS, code: o => blocks(hopt(o)).code, topic: "05", name: "בניית ערימה בשיטת Williams",
+  tag: "בונים ערימה מהכנסות אחת-אחת.", kw: "heap build williams בניית ערימה", src: "הרצאה 5",
+    intro: `<b>מה זה?</b> הדרך הנאיבית לבנות ערימה מ-${c("n")} מספרים: מתחילים מערימה ריקה ומכניסים את המספרים אחד אחד בעזרת ${c("Push")}, שמפעפע כל איבר למעלה. זו הבנייה המקורית של Williams (1964).<br><b>זמן ריצה:</b> ${c("n")} הכנסות, כל אחת ${c("O(lg n)")}, ולכן ${c("O(n lg n)")}. בהנפשה הבאה רואים את Floyd, שבונה ב-${c("O(n)")}.`,
+    legend: heapLegend,
+    inputs: [{ key: "a", label: "המספרים", def: "9, 2, 7, 6, 5, 4, 2, 7, 2, 3, 1, 8, 3, 6", hint: "עד 15 מספרים. ברירת המחדל היא הדוגמה מההרצאה." }],
+    parse(i) { const a = parseNums(i.a, "מספרים"); if (a.length > 15) throw "עד 15 מספרים."; return { a }; },
+    run(input) {
+      const { a } = input; HP = hopt(input.__opt); const { off } = blocks(HP);
+      const H = hnew([]), S = []; let swaps = 0;
+      const push = (line, msg, x = {}) => { if (x.swapped) swaps++; S.push({ line, msg, H: clone(H), d: HP.d, ...x, vars: [["last", H.last], ["החלפות עד עכשיו", swaps]] }); };
+      push(0, `מתחילים מערימה ריקה ומכניסים ${a.length} מספרים לפי הסדר.`);
+      a.forEach((x, j) => {
+        push([1, 2], `${c(`j = ${j + 1}`)}: מכניסים את ${c(x)}.`);
+        hpush(H, x);
+        push([off.push + 1, off.push + 2], `שמים את ${x} בסוף, ${c(`A[${H.last}]`)}.`, { i: H.last });
+        heapUp(H, H.last, off.hu, push);
+      });
+      push(-1, `<b>הערימה מוכנה:</b> ${c(H.A.join(", "))}. היו ${swaps} החלפות.`);
+      return S;
+    },
+    render: heapRender,
+  });
+}
+{
+  const blocks = o => codeWith([["b", ["Build()", "  For i = last … 0 Do", "    HeapifyDown(i)", "  End For"]], ["hd", HDf(o)]]);
+  algo({
+    id: "floyd", opts: HOPTS, code: o => blocks(hopt(o)).code, topic: "05", name: "בניית ערימה בשיטת Floyd",
+  tag: "בונים ערימה מלמטה למעלה בעזרת פעפוע מטה.", kw: "heap build floyd בניית ערימה heapify", src: "הרצאה 5",
+    intro: `<b>מה זה?</b> בנייה מהירה של ערימה. מסדרים את כל המספרים במערך כמו שהם, כך שהעץ כבר "צפוף" אבל הסדר עוד לא תקין. אחר כך עוברים על הצמתים <b>מהסוף להתחלה</b>, כלומר מלמטה למעלה, ועושים לכל צומת ${c("HeapifyDown")}.<br><b>למה מלמטה?</b> פעפוע מטה עובד רק אם שני תתי-העצים מתחת לצומת כבר ערימות, וכשמתחילים מלמטה זה תמיד נכון. לעלים אין מה לפעפע.<br><b>זמן ריצה:</b> ${c("O(n)")}, כי רוב הצמתים נמצאים למטה והפעפוע שלהם קצר.`,
+    legend: [["cur", "הצומת i"], ["cmp", "משווים אליו"], ["sel", "אחרי החלפה"], ["done", "תת-עץ שכבר ערימה"]],
+    inputs: [{ key: "a", label: "המספרים", def: "9, 2, 7, 6, 5, 4, 2, 7, 2, 3, 1, 8, 3, 6", hint: "עד 15 מספרים. ברירת המחדל היא הדוגמה מההרצאה." }],
+    parse(i) { const a = parseNums(i.a, "מספרים"); if (a.length > 15) throw "עד 15 מספרים."; return { a }; },
+    run(input) {
+      const { a } = input; HP = hopt(input.__opt); const { off } = blocks(HP);
+      const H = hnew(a), S = []; let swaps = 0; let okFrom = a.length;
+      const sub = () => { const ok = []; for (let k = okFrom; k <= H.last; k++) ok.push(k); return ok; };
+      const push = (line, msg, x = {}) => { if (x.swapped) swaps++; S.push({ line, msg, H: clone(H), d: HP.d, okIdx: sub().filter(k => k !== x.i && !(x.cmp || []).includes(k)), ...x, vars: [["last", H.last], ["החלפות עד עכשיו", swaps], ...(x.i !== undefined ? [["i", x.i]] : [])] }); };
+      push(0, `מסדרים את המספרים בעץ לפי הסדר שבו נתונים. העץ "צפוף", אבל עוד לא ערימה.`);
+      const firstInternal = Math.floor((a.length - 2) / HP.d);
+      for (let i = H.last; i >= 0; i--) {
+        if (i > firstInternal) {
+          if (i === H.last) push(1, `מתחילים מ-${c("i = last")}. הצמתים ${c(`${firstInternal + 1}…${H.last}`)} הם עלים, ולעלה אין מה לפעפע, כי הוא כבר ערימה קטנה בפני עצמו.`, { i });
+          okFrom = i; continue;
+        }
+        push(1, `${c(`i = ${i}`)}: כל תתי-העצים מתחת ל-${H.A[i]} כבר ערימות, אז אפשר לפעפע אותו למטה.`, { i });
+        heapDown(H, i, off.hd, push);
+        okFrom = i;
+      }
+      okFrom = 0;
+      push(-1, `<b>הערימה מוכנה:</b> ${c(H.A.join(", "))}. היו רק ${swaps} החלפות.`);
+      return S;
+    },
+    render: heapRender,
+  });
+}
+{
+  const blocks = o => codeWith([["hs", ["HeapSort(A[1,…,n])", "  min = 0.", "  idxB = 1.", "  H = BuildHeap(A).", "  While idxB ≤ n Do", "    min = H.pop().", "    B[idxB] = min.", "    idxB := idxB + 1.", "  End While.", "  Return B[1, …, n]."]], ["pop", POPf(o)], ["hd", HDf(o)]]);
+  algo({
+    id: "heapsort", opts: [HOPTS[0]], code: o => blocks(hopt(o)).code, topic: "05", name: "מיון ערימה (HeapSort)",
+  tag: "בונים ערימה, ומוציאים ממנה את המינימום שוב ושוב.", kw: "heapsort מיון ערימה", src: null,
+    intro: `<b>מה זה?</b> אותו רעיון כמו המיון הנאיבי: בכל פעם מוציאים את הקטן ביותר ומעבירים אותו לפלט. ההבדל הוא שעכשיו מחזיקים את המספרים <b>בערימה</b>, ולכן מציאת המינימום והוצאתו עולות ${c("O(lg n)")} במקום ${c("O(n)")}.<br><b>זמן ריצה:</b> בנייה ב-${c("O(n)")}, ועוד ${c("n")} הוצאות של ${c("O(lg n)")}. סך הכול ${c("O(n lg n)")}.`,
+    legend: heapLegend,
+    inputs: [{ key: "a", label: "המערך A", def: "5, 24, 4, 1, 13, 4, 10, 66", hint: "עד 12 מספרים" }],
+    parse(i) { const a = parseNums(i.a, "מערך"); if (a.length > 12) throw "עד 12 מספרים."; return { a }; },
+    run(input) {
+      const { a } = input; HP = hopt(input.__opt); const { off } = blocks(HP);
+      const n = a.length, B = Array(n).fill(null), S = [];
+      const H = hnew(a);
+      for (let i = n - 1; i >= 0; i--) heapDown(H, i, 0, () => {});
+      const push = (line, msg, x = {}) => S.push({ line, msg, H: clone(H), d: HP.d, B: B.slice(), showLen: n, ...x, vars: [["last", H.last], ...(x.i !== undefined ? [["i", x.i]] : [])] });
+      S.push({ line: 0, msg: `קלט: ${c(a.join(", "))}.`, H: hnew([]), B: B.slice() });
+      push(3, `בונים ערימה מכל המספרים (בשיטת Floyd, ב-${c("O(n)")}, ויש לה הנפשה משלה). עכשיו המינימום בשורש.`);
+      for (let ib = 1; ib <= n; ib++) {
+        const mn = H.A[0];
+        push([4, 5], `${c(`idxB = ${ib}`)}: מוציאים את המינימום מהערימה, ${c(mn)}.`, { i: 0 });
+        hswap(H, 0, H.last);
+        push(off.pop + 2, `מחליפים את השורש עם האחרון ${c(`A[${H.last}]`)}.`, { i: 0, cmp: [H.last], swapped: true });
+        H.last--;
+        push(off.pop + 3, `מקטינים את ${c("last")}. עכשיו ${mn} כבר לא בערימה.`, { i: 0 });
+        if (H.last > 0) heapDown(H, 0, off.hd, push);
+        B[ib - 1] = mn;
+        push([6, 7], `${c(`B[${ib}] = ${mn}`)}.`);
+      }
+      push(9, `<b>סיימנו:</b> ${c(B.join(", "))}.`);
+      return S;
+    },
+    render: heapRender,
+  });
+}
+/* lecture drawings: node positions taken from the slides */
+const PRE = {
+  l6: { 1: [31, 53], 2: [48, 42], 3: [48, 53], 4: [48, 63], 5: [69, 42], 6: [69, 53], 7: [75, 62], 8: [91, 44], 9: [91, 53] },
+  l7: { 1: [25, 53], 2: [42, 42], 3: [42, 53], 4: [42, 63], 5: [60, 42], 6: [60, 53], 7: [77, 42] },
+  l8: { 1: [190, 142], 2: [257, 99], 3: [257, 142], 4: [257, 181], 5: [341, 99], 6: [341, 142], 7: [341, 181] },
+  l10: { 1: [115, 243], 2: [260, 145], 3: [260, 243], 4: [260, 330], 5: [415, 145], 6: [415, 243], 7: [565, 145] },
+};
+const ORD = { key: "ord", label: "סדר בדיקת השכנים:", def: "asc", choices: [["asc", "מהקטן לגדול", "כמו בהרצאה"], ["desc", "מהגדול לקטן"]] };
+const PATHOPT = { key: "pm", label: "מציאת המסלול:", def: "BFS", choices: [["BFS", "BFS"], ["DFS", "DFS"]] };
+function findPath(adj, s, t, mode) {
+  const par = { [s]: null };
+  if (mode === "BFS") { const q = [s]; while (q.length && par[t] === undefined) { const x = q.shift(); for (const y of adj[x] || []) if (par[y] === undefined) { par[y] = x; q.push(y); } } }
+  else { const rec = x => { if (x === t) return true; for (const y of adj[x] || []) if (par[y] === undefined) { par[y] = x; if (rec(y)) return true; } return false; }; rec(s); }
+  return par;
+}
+function gPos(g, s, input, preset) { return input.__default && preset ? scalePos(preset) : layeredLayout(g.nodes, g.edges, s); }
+/* ---------- graph helpers ---------- */
+function gInputs(def, { weighted, directed, start = "1", startLabel = "צומת התחלה s", extra = [] } = {}) {
+  return [{ key: "g", label: "הגרף (קשת בכל שורה)", def, multi: true, hint: `${directed ? `כל שורה היא קשת מכוונת, למשל ${c("1->2" + (weighted ? " 4" : ""))}` : `כל שורה היא קשת, למשל ${c("1-2" + (weighted ? " 4" : ""))}`}${weighted ? ". המספר בסוף הוא המשקל" : ""}. עד 10 צמתים.` },
+    ...(start !== null ? [{ key: "s", label: startLabel, def: start, size: 5 }] : []), ...extra];
+}
+function gParse(i, opt) {
+  const g = parseGraph(i.g, opt);
+  if (g.nodes.length > 10) throw "עד 10 צמתים, כדי שההנפשה תהיה ברורה.";
+  const out = { g };
+  if (i.s !== undefined) { const s = String(i.s).trim(); if (!g.nodes.includes(s)) throw `הצומת "${esc(s)}" לא מופיע בגרף.`; out.s = s; }
+  return out;
+}
+function gDraw(g, pos, nodeCls = {}, edgeCls = {}, { directed = false, sub = {}, edgeLabel = null } = {}) {
+  const nodes = g.nodes.map(id => ({ id, x: pos[id].x, y: pos[id].y, cls: nodeCls[id] || "", sub: sub[id] }));
+  const edges = g.edges.map(e => ({ u: e.u, v: e.v, dir: directed, bend: directed && g.edges.some(f => f.u === e.v && f.v === e.u) ? 22 : 0, cls: edgeCls[edgeKey(e.u, e.v, directed)] || "", label: edgeLabel ? edgeLabel(e) : (e.w !== null ? e.w : "") }));
+  return drawGraph({ nodes, edges, h: 340 });
+}
+
+/* ---------- 06: BFS ---------- */
+algo({
+  id: "bfs", topic: "06", name: "סריקה לרוחב (BFS)",
+  tag: "סורקים שכבה אחרי שכבה, בעזרת תור.", kw: "bfs סריקה לרוחב חיפוש תור גרף", src: "הרצאה 6, שקף 19",
+  intro: `<b>מה זה?</b> סריקה של כל הצמתים שאפשר להגיע אליהם מצומת ${c("s")}, <b>שכבה אחרי שכבה</b>: קודם ${c("s")}, אחר כך כל השכנים שלו, אחר כך השכנים של השכנים, וכן הלאה. מחזיקים רשימה ${c("L")} (תור): מוציאים מהראש ומוסיפים לסוף. כך הצמתים הקרובים יוצאים לפני הרחוקים.<br><b>זמן ריצה:</b> ${c("O(n + m)")}. השכנים נבדקים מהמספר הקטן לגדול.`,
+  code: ["BFS(G=(V,E), s)", "  Initially, all vertices in V are \"not visited\".", "  Create empty list L.", "  Add s to the tail of L, and mark s as \"visited\".", "  While L ≠ ∅ Do", "    Let i be the head of L, and remove i from L.", "    For each j ∈ N(i) do", "      If j \"not visited\" Then", "        Mark j as \"visited\"", "        Add j to the tail of L.", "      End If", "    End For.", "  End While."],
+  legend: [["cur","i"],["cmp","j – השכן שבודקים"],["vis","ב-L"],["done","סיימנו"],["e:tree","עץ BFS"]],
+  opts: [ORD],
+  inputs: gInputs("1-2\n1-3\n1-4\n1-7\n2-3\n2-5\n2-6\n3-4\n3-6\n3-9\n4-6\n4-7\n5-6\n5-8\n6-9\n8-9"),
+  parse(i) { return gParse(i, {}); },
+  run(input) {
+    const { g, s } = input, Nb = i => input.__opt.ord === "desc" ? neighbors(g, i).reverse() : neighbors(g, i);
+    const pos = gPos(g, s, input, PRE.l6), S = [], vis = new Set(), done = new Set(), L = [], tree = {}, order = [];
+    const snap = (line, msg, x = {}) => {
+      const nc = {}; vis.forEach(v => nc[v] = "vis"); done.forEach(v => nc[v] = "done");
+      if (x.i) nc[x.i] = "cur"; if (x.j) nc[x.j] = "cmp";
+      const ec = { ...tree }; if (x.i && x.j) ec[edgeKey(x.i, x.j)] = tree[edgeKey(x.i, x.j)] ? "tree" : "cur";
+      S.push({ line, msg, g, pos, nc, ec, L: L.slice(), order: order.slice(), vars: [["i", x.i || "–"], ["j", x.j || "–"]] });
+    };
+    snap([1, 2], `כל הצמתים "not visited", והרשימה ${c("L")} ריקה.`);
+    L.push(s); vis.add(s);
+    snap(3, `מוסיפים את ${c(s)} ל-${c("L")} ומסמנים אותו "visited".`);
+    while (L.length) {
+      const i = L.shift(); order.push(i);
+      snap(5, `מוציאים את ${c(i)} מראש הרשימה. עכשיו בודקים את השכנים שלו: ${c(Nb(i).join(", "))}.`, { i });
+      for (const j of Nb(i)) {
+        if (!vis.has(j)) {
+          vis.add(j); L.push(j); tree[edgeKey(i, j)] = "tree";
+          snap([7, 8, 9], `${c(j)} עוד לא ביקרנו בו, אז מסמנים אותו "visited" ומוסיפים לסוף ${c("L")}.`, { i, j });
+        } else snap(7, `${c(j)} כבר "visited", אז מדלגים עליו.`, { i, j });
+      }
+      done.add(i);
+    }
+    snap(12, `${c("L")} ריקה, והסריקה הסתיימה. <b>סדר הביקור: ${c(order.join(", "))}.</b> הקשתות בתכלת יוצרות את עץ ה-BFS.${vis.size < g.nodes.length ? ` הצמתים ${c(g.nodes.filter(v => !vis.has(v)).join(", "))} לא נסרקו, כי אין אליהם מסלול מ-${s}.` : ""}`);
+    return S;
+  },
+  render(st) {
+    return gDraw(st.g, st.pos, st.nc, st.ec) + `<div style="margin-top:6px"><div style="font-size:13px;color:var(--muted)">הרשימה L (ראש ← סוף):</div><div class="listbox">${st.L.map(v => `<span>${esc(v)}</span>`).join("") || "<em>ריקה</em>"}</div><div style="font-size:13px;color:var(--muted);margin-top:6px">סדר ההוצאה מ-L: <span class="ltr">${st.order.join(", ")}</span></div></div>`;
+  },
+});
+
+/* ---------- 06: DFS ---------- */
+algo({
+  id: "dfs", topic: "06", name: "סריקה לעומק (DFS)",
+  tag: "הולכים כמה שיותר עמוק, וחוזרים אחורה כשנתקעים.", kw: "dfs סריקה לעומק חיפוש רקורסיה גרף", src: "הרצאה 6, שקף 19",
+  intro: `<b>מה זה?</b> סריקה שהולכת <b>כמה שיותר עמוק</b> לפני שהיא חוזרת אחורה. מצומת ${c("i")} עוברים לשכן הראשון שעוד לא ביקרנו בו, ממנו לשכן שלו, וכן הלאה. כשנתקעים, הקריאה הרקורסיבית מסתיימת וחוזרים צעד אחורה.<br><b>זמן ריצה:</b> ${c("O(n + m)")}. השכנים נבדקים מהמספר הקטן לגדול.`,
+  code: ["DFS(G=(V,E), i)", "  Mark i as \"visited\".", "  For each j ∈ N(i) do", "    If j \"not visited\" Then DFS(G,j).", "  End For"],
+  legend: [["cur","הקריאה שרצה"],["cmp","השכן שבודקים"],["vis","במחסנית"],["done","הסתיים"],["e:tree","עץ DFS"]],
+  opts: [ORD],
+  inputs: gInputs("1-2\n1-3\n1-4\n1-7\n2-3\n2-5\n2-6\n3-4\n3-6\n3-9\n4-6\n4-7\n5-6\n5-8\n6-9\n8-9"),
+  parse(i) { return gParse(i, {}); },
+  run(input) {
+    const { g, s } = input, Nb = i => input.__opt.ord === "desc" ? neighbors(g, i).reverse() : neighbors(g, i);
+    const pos = gPos(g, s, input, PRE.l6), S = [], vis = new Set(), done = new Set(), stack = [], tree = {}, order = [];
+    const snap = (line, msg, x = {}) => {
+      const nc = {}; vis.forEach(v => nc[v] = "vis"); done.forEach(v => nc[v] = "done");
+      const top = stack[stack.length - 1]; if (top) nc[top] = "cur"; if (x.j) nc[x.j] = "cmp";
+      const ec = { ...tree }; if (top && x.j && !tree[edgeKey(top, x.j)]) ec[edgeKey(top, x.j)] = "cur";
+      S.push({ line, msg, g, pos, nc, ec, stack: stack.slice(), order: order.slice(), vars: [["i", top || "–"], ["j", x.j || "–"]] });
+    };
+    (function dfs(i) {
+      stack.push(i); vis.add(i); order.push(i);
+      snap([0, 1], `${c(`DFS(G, ${i})`)}: מסמנים את ${c(i)} כ-"visited".`);
+      for (const j of Nb(i)) {
+        if (!vis.has(j)) {
+          tree[edgeKey(i, j)] = "tree";
+          snap(3, `${c(j)} עוד לא ביקרנו בו, אז נכנסים אליו מיד, לפני שבודקים את שאר השכנים של ${i}.`, { j });
+          dfs(j);
+          snap(2, `חזרנו ל-${c(i)} וממשיכים לשכנים הבאים שלו.`);
+        } else snap(3, `${c(j)} כבר "visited", אז מדלגים עליו.`, { j });
+      }
+      done.add(i); stack.pop();
+      snap(4, `סיימנו לעבור על כל השכנים של ${c(i)}, והקריאה ${c(`DFS(G, ${i})`)} מסתיימת.${stack.length ? ` חוזרים ל-${c(stack[stack.length - 1])}.` : ""}`);
+    })(s);
+    snap(-1, `<b>הסריקה הסתיימה. סדר הביקור: ${c(order.join(", "))}.</b> הקשתות בתכלת יוצרות את עץ ה-DFS.${vis.size < g.nodes.length ? ` הצמתים ${c(g.nodes.filter(v => !vis.has(v)).join(", "))} לא נסרקו, כי אין אליהם מסלול מ-${s}.` : ""}`);
+    return S;
+  },
+  render(st) {
+    return gDraw(st.g, st.pos, st.nc, st.ec) + `<div style="margin-top:6px"><div style="font-size:13px;color:var(--muted)">מחסנית הרקורסיה (מהקריאה הראשונה לנוכחית):</div><div class="listbox">${st.stack.map(v => `<span>DFS(${esc(v)})</span>`).join("") || "<em>ריקה</em>"}</div><div style="font-size:13px;color:var(--muted);margin-top:6px">סדר הביקור: <span class="ltr">${st.order.join(", ")}</span></div></div>`;
+  },
+});
+
+/* ---------- 07: Prim ---------- */
+algo({
+  id: "prim", topic: "07", name: "האלגוריתם של Prim",
+  tag: "מגדלים עץ: בכל צעד מוסיפים את הקשת הקלה שיוצאת ממנו.", kw: "prim עץ פורש מינימלי mst", src: "הרצאה 7, שקף 13",
+  intro: `<b>מה זה עץ פורש מינימלי?</b> קבוצת קשתות שמחברת את כל הצמתים, בלי מעגלים, כך שסכום המשקלים הוא הקטן ביותר האפשרי.<br><b>הרעיון של Prim:</b> מתחילים מצומת אחד ומגדלים עץ. בכל צעד מסתכלים על כל הקשתות שמחברות צומת שכבר בעץ ("visited") לצומת שעוד לא בעץ, ומוסיפים את <b>הקלה ביותר</b> מביניהן.<br><b>זמן ריצה:</b> במימוש פשוט ${c("O(nm)")}, ועם ערימה ${c("O(m lg n)")}.`,
+  opts: [{ key: "mx", label: "עץ פורש:", def: false, choices: [[false, "מינימלי", "כמו בהרצאה"], [true, "מקסימלי"]] }],
+  code: o => ["Prim(G=(V,E))", "  Initially, all vertices are marked \"not visited\".", "  T = ∅.", "  Mark arbitrary vertex as \"visited\".", "  While there exists a vertex \"not visited\" Do", `    Let {i,j} be the ${o.mx ? "maximum" : "minimum"} weight edge between`, "        \"visited\" vertices i and \"not visited\" vertices j.", "    Mark j as \"visited\".", "    Add {i,j} to T.", "  End While."],
+  legend: [["vis","בעץ"],["sel","נוסף עכשיו"],["e:cand","מועמדות"],["e:cur","הקלה ביותר"],["e:tree","ב-T"]],
+  inputs: gInputs("1-2 2\n1-3 5\n1-4 4\n2-3 2\n2-5 7\n2-6 4\n3-4 1\n3-6 3\n4-6 4\n5-6 1\n5-7 5\n6-7 7", { weighted: true, startLabel: "הצומת הראשון" }),
+  parse(i) { return gParse(i, { weighted: true }); },
+  run(input) {
+    const MX = input.__opt.mx;
+    const { g, s } = input;
+    const pos = gPos(g, s, input, PRE.l7), S = [], vis = new Set(), T = [];
+    let total = 0;
+    const snap = (line, msg, x = {}) => {
+      const nc = {}; vis.forEach(v => nc[v] = "vis"); if (x.j) nc[x.j] = "sel";
+      const ec = {}; (x.cand || []).forEach(e => ec[edgeKey(e.u, e.v)] = "cand"); T.forEach(e => ec[edgeKey(e.u, e.v)] = "tree"); if (x.pick) ec[edgeKey(x.pick.u, x.pick.v)] = "cur";
+      S.push({ line, msg, g, pos, nc, ec, vars: [["T", T.map(e => `{${e.u},${e.v}}`).join(" ") || "∅"], ["משקל T", total]] });
+    };
+    snap([1, 2], `כל הצמתים "not visited", ו-${c("T = ∅")}.`);
+    vis.add(s);
+    snap(3, `מסמנים את ${c(s)} כ-"visited". מכאן העץ יגדל.`);
+    while (vis.size < g.nodes.length) {
+      const cand = g.edges.filter(e => vis.has(e.u) !== vis.has(e.v));
+      if (!cand.length) { snap(4, `<b>הגרף לא קשיר:</b> אין קשת מהצמתים ב-T לצמתים ${c(g.nodes.filter(v => !vis.has(v)).join(", "))}, ולכן אין עץ פורש.`); return S; }
+      snap(4, `יש עוד צמתים שלא ב-T. הקשתות שחוצות בין "visited" ל-"not visited" (מקווקו): ${c(cand.map(e => `{${e.u},${e.v}}:${e.w}`).join(", "))}.`, { cand });
+      const best = cand.reduce((a, b) => (MX ? b.w > a.w : b.w < a.w) ? b : a);
+      const i = vis.has(best.u) ? best.u : best.v, j = vis.has(best.u) ? best.v : best.u;
+      snap([5, 6], `${MX ? "הכבדה" : "הקלה"} ביותר מביניהן היא ${c(`{${i},${j}}`)} עם משקל ${c(best.w)}.`, { cand, pick: best, j });
+      vis.add(j); T.push(best); total += best.w;
+      snap([7, 8], `מסמנים את ${c(j)} כ-"visited" ומוסיפים את ${c(`{${i},${j}}`)} ל-${c("T")}.`, { j });
+    }
+    snap(9, `<b>כל הצמתים ב-T.</b> העץ הפורש ה${MX ? "מקסימלי" : "מינימלי"} מכיל ${T.length} קשתות, והמשקל הכולל שלו הוא <b>${total}</b>.`);
+    return S;
+  },
+  render(st) { return gDraw(st.g, st.pos, st.nc, st.ec); },
+});
+
+/* ---------- 08: Dijkstra ---------- */
+const DIJ_NAIVE = ["Dijkstra(G=(V,E), s)", "  For each i ∈ V Do", "    Mark i as \"not visited\".", "    Set dist(i) = ∞ and father(i) = ⊥.", "  End For", "  Set dist(s) = 0.", "  While there exists a vertex \"not visited\" Do", "    Let i be a \"not visited\" vertex with minimum dist(i).", "    Mark i as \"visited\".", "    For each \"not visited\" j ∈ N(i) Do", "      If dist(i) + d(i,j) < dist(j) Then", "        dist(j) = dist(i) + d(i,j).", "        father(j) = i.", "      End If", "    End For", "  End While"];
+const DIJ_HEAP = ["Dijkstra(G=(V,E), s)", "  For each i ∈ V Do", "    Mark i as \"not visited\".", "    Set dist(i) = ∞ and father(i) = ⊥.", "  End For", "  Set dist(s) = 0.", "  Create Heap H with all vertices sorted according to dist().", "  While there exists a vertex \"not visited\" Do", "    i = H.Pop().", "    Mark i as \"visited\".", "    For each \"not visited\" j ∈ N(i) Do", "      If dist(i) + d(i,j) < dist(j) Then", "        dist(j) = dist(i) + d(i,j).", "        H.DecreaseKey(j,dist(j))", "        father(j) = i.", "      End If", "    End For", "  End While", "", "DecreaseKey(j, val)", "  H[Aux[j]] = val.", "  HeapifyUp(Aux[j])."];
+algo({
+  id: "dijkstra", topic: "08", name: "האלגוריתם של Dijkstra",
+  tag: "מרחקים קצרים מ-s: בכל צעד מקבעים את הצומת הקרוב ביותר.", kw: "dijkstra מסלול קצר מרחק dist father ערימה decreasekey aux", src: "הרצאה 8, שקף 10",
+  intro: `<b>מה זה?</b> מציאת המרחק הקצר ביותר מצומת ${c("s")} לכל שאר הצמתים, בגרף מכוון עם משקלים <b>לא שליליים</b>. לכל צומת שומרים ${c("dist")}, המרחק הכי טוב שמצאנו עד עכשיו, ו-${c("father")}, מאיפה הגענו. בכל צעד בוחרים את הצומת שעוד לא ביקרנו בו עם ה-${c("dist")} הקטן ביותר. המרחק שלו כבר סופי, ומעדכנים דרכו את השכנים שלו.<br><b>עם ערימה (הרצאה 8, שקפים 34–38):</b> מחזיקים את כל הצמתים בערימת מינימום לפי ${c("dist")}, כך שמציאת הצומת הקרוב היא ${c("Pop")}. כש-${c("dist(j)")} קטן, עושים ${c("DecreaseKey")}: מוצאים את ${c("j")} בערימה בעזרת מערך העזר ${c("Aux")}, ומפעפעים אותו למעלה.<br><b>זמן ריצה:</b> במימוש פשוט ${c("O(n²)")}. עם ערימה ${c("O((n + m) lg n)")}.`,
+  opts: [{ key: "impl", label: "מימוש:", def: "naive", choices: [["naive", "רגיל", "שקף 7"], ["heap", "עם ערימה", "שקף 38"]] }],
+  code: o => o.impl === "heap" ? DIJ_HEAP : DIJ_NAIVE,
+  legend: [["cur","i"],["cmp","j"],["done","מרחק סופי"],["e:tree","father"]],
+  inputs: gInputs("1->2 3\n1->3 3\n1->4 1\n2->3 2\n3->2 2\n2->5 2\n2->6 4\n3->6 10\n4->3 1\n4->6 12\n4->7 9\n5->6 4\n6->7 2", { weighted: true, directed: true }),
+  parse(i) { return gParse(i, { weighted: true, directed: true }); },
+  run(input) {
+    const { g, s } = input, HEAP = input.__opt.impl === "heap";
+    const pos = gPos(g, s, input, PRE.l8), S = [], vis = new Set(), dist = {}, father = {};
+    const D = true, L = HEAP ? { init: [1, 2, 3, 4], s: 5, loop: 7, mark: 9, forj: 10, rel: [11, 12, 14], relH: 13, no: 11, end: 17 } : { init: [1, 2, 3, 4], s: 5, loop: 6, mark: 8, forj: 9, rel: [10, 11, 12], no: 10, end: 15 };
+    let H = [], last = -1; const aux = {};
+    const snap = (line, msg, x = {}) => {
+      const nc = {}; vis.forEach(v => nc[v] = "done"); if (x.i) nc[x.i] = "cur"; if (x.j) nc[x.j] = "cmp";
+      const ec = {}; for (const v in father) if (father[v] !== null) ec[edgeKey(father[v], v, D)] = "tree";
+      if (x.i && x.j) ec[edgeKey(x.i, x.j, D)] = "cur";
+      const sub = {}; g.nodes.forEach(v => sub[v] = dist[v] === undefined ? "" : fmt(dist[v]));
+      const hp = HEAP && H.length ? { H: H.slice(), last, aux: { ...aux }, hl: x.hl || {} } : null;
+      S.push({ line, msg, g, pos, nc, ec, sub, hp, table: g.nodes.map(v => [v, dist[v], father[v]]), vars: [["i", x.i || "–"], ["j", x.j || "–"], ...(HEAP ? [["last", last]] : [])] });
+    };
+    const less = (a, b) => dist[H[a]] < dist[H[b]];
+    const swapH = (p, q) => { [H[p], H[q]] = [H[q], H[p]]; aux[H[p]] = p; aux[H[q]] = q; };
+    const down = (p, line, quiet) => {
+      while (true) {
+        const l = 2 * p + 1, r = 2 * p + 2; let m = p;
+        if (l <= last && less(l, m)) m = l; if (r <= last && less(r, m)) m = r;
+        if (m === p) { if (!quiet && l <= last) snap(line, `${c(H[p])} (dist ${fmt(dist[H[p]])}) לא גדול מהילדים שלו, אז הערימה תקינה.`, { hl: { [p]: "cur" } }); return; }
+        if (!quiet) snap(line, `${c(H[p])} (dist ${fmt(dist[H[p]])}) גדול מהילד ${c(H[m])} (dist ${fmt(dist[H[m]])}), אז מחליפים ביניהם ומעדכנים את ${c("Aux")}.`, { hl: { [p]: "cur", [m]: "cmp" } });
+        swapH(p, m); p = m;
+      }
+    };
+    const up = (p, j, i) => {
+      while (p > 0) {
+        const q = Math.floor((p - 1) / 2);
+        if (!less(p, q)) { snap(21, `${c(H[p])} (dist ${fmt(dist[H[p]])}) לא קטן מהאבא ${c(H[q])} (dist ${fmt(dist[H[q]])}), אז עוצרים.`, { i, j, hl: { [p]: "cur", [q]: "cmp" } }); return; }
+        snap(21, `${c(H[p])} (dist ${fmt(dist[H[p]])}) קטן מהאבא ${c(H[q])} (dist ${fmt(dist[H[q]])}): מחליפים ומעדכנים את ${c("Aux")}.`, { i, j, hl: { [p]: "cur", [q]: "cmp" } });
+        swapH(p, q); p = q;
+      }
+      snap(21, `${c(H[0])} הגיע לשורש.`, { i, j, hl: { 0: "cur" } });
+    };
+    g.nodes.forEach(v => { dist[v] = INF; father[v] = null; });
+    snap(L.init, `לכל הצמתים ${c("dist = ∞")} ו-${c("father = ⊥")}. המספר מעל כל צומת הוא ה-${c("dist")} שלו.`);
+    dist[s] = 0;
+    snap(L.s, `${c(`dist(${s}) = 0`)}: המרחק מ-${s} לעצמו הוא 0.`);
+    if (HEAP) {
+      H = g.nodes.slice(); last = H.length - 1; H.forEach((v, p) => aux[v] = p);
+      for (let p = Math.floor((H.length - 2) / 2); p >= 0; p--) down(p, 6, true);
+      snap(6, `בונים ערימת מינימום מכל הצמתים לפי ${c("dist")} (בשיטת Floyd), ומאתחלים את ${c("Aux")}: לכל צומת, המקום שלו בערימה. ${c(s)} עם ${c("dist = 0")} נמצא בשורש.`, { hl: { 0: "cur" } });
+    }
+    while (vis.size < g.nodes.length) {
+      let i;
+      if (HEAP) {
+        i = H[0];
+        if (dist[i] === INF) { const rest = g.nodes.filter(v => !vis.has(v)); rest.forEach(v => vis.add(v)); snap([L.loop, 8, 9], `בשורש הערימה ${c("dist = ∞")}: לצמתים שנשארו (${c(rest.join(", "))}) אין מסלול מ-${s}.`); break; }
+        snap(8, `${c("H.Pop()")}: בשורש נמצא ${c(i)}, עם ה-${c("dist")} הקטן ביותר (${c(dist[i])}).`, { i, hl: { 0: "cur" } });
+        swapH(0, last); last--; aux[i] = "–";
+        snap(8, `מעבירים את האחרון בערימה לשורש, מקטינים את ${c("last")}, ומפעפעים למטה.`, { i, hl: last >= 0 ? { 0: "cmp" } : {} });
+        if (last > 0) down(0, 8, false);
+      } else {
+        const cand = g.nodes.filter(v => !vis.has(v));
+        i = cand.reduce((a, b) => dist[b] < dist[a] ? b : a);
+        if (dist[i] === INF) { cand.forEach(v => vis.add(v)); snap([6, 7, 8], `לכל הצמתים שנשארו (${c(cand.join(", "))}) המרחק הוא ${c("∞")}: אין אליהם מסלול מ-${s}. הם מסומנים "visited" ולא משתנה כלום.`); break; }
+        snap([6, 7], `בין הצמתים שעוד לא ביקרנו בהם, ל-${c(i)} יש את ה-${c("dist")} הקטן ביותר: ${c(dist[i])}.${g.nodes.length > 1 ? ` (כדי למצוא אותו עברנו על ${cand.length} צמתים.)` : ""}`, { i });
+      }
+      vis.add(i);
+      snap(L.mark, `מסמנים את ${c(i)} כ-"visited". המרחק שלו ${c(dist[i])} כבר סופי.`, { i });
+      for (const j of neighbors(g, i, true)) {
+        if (vis.has(j)) continue;
+        const w = g.edges.find(e => e.u === i && e.v === j).w, nd = dist[i] + w;
+        if (nd < dist[j]) {
+          const old = dist[j]; dist[j] = nd; father[j] = i;
+          if (HEAP) {
+            snap([11, 12], `${c(`${dist[i]} + ${w} = ${nd} < ${fmt(old)}`)}: מעדכנים ${c(`dist(${j}) = ${nd}`)}.`, { i, j });
+            snap([13, 20], `${c(`DecreaseKey(${j}, ${nd})`)}: לפי ${c("Aux")}, הצומת ${j} נמצא במקום ${c(aux[j])} בערימה. מעדכנים שם את הערך.`, { i, j, hl: { [aux[j]]: "cur" } });
+            up(aux[j], j, i);
+            snap(14, `${c(`father(${j}) = ${i}`)}.`, { i, j });
+          } else snap(L.rel, `${c(`dist(${i}) + d(${i},${j}) = ${dist[i]} + ${w} = ${nd} < ${fmt(old)}`)}. מצאנו דרך קצרה יותר ל-${j}: מעדכנים ${c(`dist(${j}) = ${nd}`)} ו-${c(`father(${j}) = ${i}`)}.`, { i, j });
+        } else snap(L.no, `${c(`dist(${i}) + d(${i},${j}) = ${nd} ≥ dist(${j}) = ${fmt(dist[j])}`)}. הדרך דרך ${i} לא טובה יותר, אז לא משנים.`, { i, j });
+      }
+    }
+    snap(L.end, `<b>סיימנו.</b> המרחקים הסופיים מופיעים מעל הצמתים. הקשתות בתכלת (father) יוצרות את עץ המסלולים הקצרים: כדי לשחזר מסלול, הולכים מהיעד אחורה לפי ${c("father")}.`);
+    return S;
+  },
+  render(st) {
+    const table = `<table data-k="dt" style="margin:8px auto 0;border-collapse:collapse;font-size:13.5px;direction:ltr">${["צומת", "dist", "father"].map((h, r) => `<tr><td style="color:var(--muted);padding:2px 8px">${h}</td>${st.table.map(t => `<td style="border:1px solid var(--line);padding:3px 9px;text-align:center;font-weight:600">${r === 0 ? esc(t[0]) : r === 1 ? fmt(t[1]) : (t[2] === null || t[2] === undefined ? "⊥" : esc(t[2]))}</td>`).join("")}</tr>`).join("")}</table>`;
+    const graph = gDraw(st.g, st.pos, st.nc, st.ec, { directed: true, sub: st.sub });
+    if (!st.hp) return graph + table;
+    const hp = st.hp, n = hp.last + 1, hl = {};
+    for (let p = 0; p < n; p++) hl[p] = hp.hl[p] || "";
+    const tree = drawHeapTree(hp.H.slice(0, n), hp.last, hl, hp.H.slice(0, n), 420, 2, hp.H.slice(0, n).map(v => fmt(st.table.find(t => t[0] === v)[1])));
+    const auxRow = arrRow({ label: "Aux: המקום של כל צומת בערימה", vals: st.g.nodes.map(v => hp.aux[v]), ptr: Object.fromEntries(st.g.nodes.map((v, k) => [k, "צומת " + v])), idxShow: false, empty: v => v === "–" });
+    return `${graph}<div class="two" data-k="dbot" style="margin-top:8px;align-items:center"><div><div class="sublabel" style="margin:0">הערימה H (מעל כל צומת: ה-dist שלו)</div>${tree}</div><div>${auxRow}${table}</div></div>`;
+  },
+});
+
+/* ---------- 09: bipartite matching ---------- */
+algo({
+  id: "matching", topic: "09", name: "שידוך מקסימלי בגרף דו-צדדי",
+  tag: "מגדילים את השידוך שוב ושוב בעזרת מסלולי שיפור.", kw: "matching שידוך דו צדדי מסלול שיפור berge", src: "הרצאה 9, שקף 25",
+  intro: `<b>מה זה שידוך?</b> קבוצת קשתות ${c("M")} שאין לשתיים מהן צומת משותף. מחפשים שידוך עם כמה שיותר קשתות.<br><b>מסלול שיפור</b> הוא מסלול שמתחיל ונגמר בצמתים לא משודכים, והקשתות בו מתחלפות: לא ב-${c("M")}, ב-${c("M")}, לא ב-${c("M")}, וכן הלאה. אם "הופכים" את המסלול (${c("M ⊕ E(P)")}), השידוך גדל ב-1. לפי הלמה של Berge, אם אין מסלול שיפור, השידוך מקסימלי.<br><b>איך מוצאים מסלול שיפור?</b> בונים את ${c("H*(M)")}: קשתות שלא ב-${c("M")} מכוונים מ-${c("A")} ל-${c("B")}, קשתות ב-${c("M")} מכוונים מ-${c("B")} ל-${c("A")}, מוסיפים ${c("s")} עם קשתות לכל צומת לא משודך ב-${c("A")}, ו-${c("t")} עם קשתות מכל צומת לא משודך ב-${c("B")}. כל מסלול מ-${c("s")} ל-${c("t")} הוא מסלול שיפור. אפשר למצוא אותו עם BFS או עם DFS (בחרו למעלה).`,
+  code: ["BipartiteMatching(G=(A∪B,E))", "  M = ∅.", "  While forever Do", "    Construct H*(M).", "    Compute s,t-path P* in H*(M).", "    If P* = ∅ Return M.", "    P = P* \\ {s,t}.", "    M = M ⊕ E(P).", "  End While."],
+  legend: [["e:match","בשידוך M"],["e:path","מסלול שיפור"]],
+  opts: [{ ...PATHOPT, def: "BFS" }],
+  inputs: [{ key: "g", label: "הקשתות (צומת מ-A – צומת מ-B)", def: "1-4\n1-5\n2-4\n2-5\n2-7\n3-5\n3-6", multi: true, hint: `בכל שורה: צומת מצד ${c("A")}, מקף, צומת מצד ${c("B")}. למשל ${c("1-a")}. עד 6 צמתים בכל צד.` }],
+  parse(i) {
+    const g = parseGraph(i.g, {});
+    const A = sortIds([...new Set(g.edges.map(e => e.u))]), B = sortIds([...new Set(g.edges.map(e => e.v))]);
+    const both = A.filter(x => B.includes(x)); if (both.length) throw `הצומת ${c(both[0])} מופיע גם בצד A וגם בצד B. השמות בשני הצדדים צריכים להיות שונים.`;
+    if (A.length > 6 || B.length > 6) throw "עד 6 צמתים בכל צד.";
+    return { g, A, B };
+  },
+  run(input) {
+    const { g, A, B } = input, PM = input.__opt.pm;
+    const S = [], M = new Set();
+    const W = 620, H = Math.max(A.length, B.length) * 58 + 40;
+    const pos = { s: { x: 40, y: H / 2 }, t: { x: W - 40, y: H / 2 } };
+    A.forEach((a, k) => pos[a] = { x: 200, y: 30 + k * (H - 60) / Math.max(1, A.length - 1) + (A.length === 1 ? (H - 60) / 2 : 0) });
+    B.forEach((b, k) => pos[b] = { x: 420, y: 30 + k * (H - 60) / Math.max(1, B.length - 1) + (B.length === 1 ? (H - 60) / 2 : 0) });
+    const mk = (a, b) => a + "~" + b;
+    const matched = v => [...M].some(k => k.split("~").includes(v));
+    const snap = (line, msg, x = {}) => S.push({ line, msg, A, B, pos, HH: H, edges: g.edges, M: [...M], ...x, vars: [["|M|", M.size], ["M", [...M].map(k => `{${k.replace("~", ",")}}`).join(" ") || "∅"]] });
+    snap(1, `מתחילים עם שידוך ריק, ${c("M = ∅")}. ${c("A")} משמאל, ${c("B")} מימין.`);
+    let it = 0;
+    while (true) {
+      it++;
+      const freeA = A.filter(a => !matched(a)), freeB = B.filter(b => !matched(b));
+      const hEdges = [...freeA.map(a => ({ u: "s", v: a })), ...g.edges.map(e => M.has(mk(e.u, e.v)) ? { u: e.v, v: e.u, m: true } : { u: e.u, v: e.v }), ...freeB.map(b => ({ u: b, v: "t" }))];
+      snap([2, 3], `סיבוב ${it}: בונים את ${c("H*(M)")}. קשתות שלא בשידוך מכוונות A→B, קשתות בשידוך (ירוק) מכוונות B→A. ${c("s")} מחובר לצמתים הלא משודכים ב-A${freeA.length ? ` (${c(freeA.join(", "))})` : ""}, והצמתים הלא משודכים ב-B${freeB.length ? ` (${c(freeB.join(", "))})` : ""} מחוברים ל-${c("t")}.`, { H: hEdges });
+      const adj = {}; hEdges.forEach(e => (adj[e.u] = adj[e.u] || []).push(e.v));
+      Object.values(adj).forEach(l => l.sort((x, y) => sortIds([x, y])[0] === x ? -1 : 1));
+      const par = findPath(adj, "s", "t", PM);
+      if (par.t === undefined) {
+        snap(5, `אין מסלול מ-${c("s")} ל-${c("t")} ב-${c("H*(M)")}, כלומר אין מסלול שיפור. לפי הלמה של Berge, ${c("M")} מקסימלי. <b>גודל השידוך: ${M.size}.</b>`, { H: hEdges, final: true });
+        break;
+      }
+      const path = []; for (let v = "t"; v !== null; v = par[v]) path.unshift(v);
+      snap(4, `${PM} מצא מסלול מ-${c("s")} ל-${c("t")}: ${c(path.join(" → "))}.`, { H: hEdges, path });
+      const P = path.slice(1, -1);
+      const add = [], rem = [];
+      for (let k = 0; k + 1 < P.length; k++) { const a = A.includes(P[k]) ? P[k] : P[k + 1], b = a === P[k] ? P[k + 1] : P[k]; (M.has(mk(a, b)) ? rem : add).push(mk(a, b)); }
+      snap(6, `מורידים את ${c("s")} ו-${c("t")}, ונשאר מסלול השיפור ${c("P = " + P.join(" – "))}. הוא מתחיל ונגמר בצמתים לא משודכים, ויש בו ${add.length} קשתות שלא ב-${c("M")} ו-${rem.length} קשתות ב-${c("M")}.`, { path: P });
+      rem.forEach(k => M.delete(k)); add.forEach(k => M.add(k));
+      snap(7, `${c("M = M ⊕ E(P)")}: קשתות המסלול שלא היו בשידוך נכנסות אליו, ואלה שהיו בו יוצאות. ${rem.length ? `יצאו ${c(rem.map(k => `{${k.replace("~", ",")}}`).join(" "))}, ` : ""}נכנסו ${c(add.map(k => `{${k.replace("~", ",")}}`).join(" "))}. השידוך גדל ב-1, ל-${M.size}.`, { path: P });
+    }
+    return S;
+  },
+  render(st) {
+    const showH = !!st.H && !st.final;
+    const nodes = [...st.A, ...st.B].map(v => ({ id: v, x: st.pos[v].x, y: st.pos[v].y, cls: st.path && st.path.includes(v) ? "sel" : (st.M.some(k => k.split("~").includes(v)) ? "vis" : "") }));
+    if (showH) nodes.push({ id: "s", x: st.pos.s.x, y: st.pos.s.y, cls: st.path && st.path.includes("s") ? "sel" : "cmp" }, { id: "t", x: st.pos.t.x, y: st.pos.t.y, cls: st.path && st.path.includes("t") ? "sel" : "cmp" });
+    const inPath = (u, v) => { if (!st.path) return false; for (let k = 0; k + 1 < st.path.length; k++) if ((st.path[k] === u && st.path[k + 1] === v) || (st.path[k] === v && st.path[k + 1] === u)) return true; return false; };
+    let edges;
+    if (showH) edges = st.H.map(e => ({ u: e.u, v: e.v, dir: true, cls: inPath(e.u, e.v) ? "path" : (e.m ? "match" : "") }));
+    else edges = st.edges.map(e => ({ u: e.u, v: e.v, cls: inPath(e.u, e.v) ? "path" : (st.M.includes(e.u + "~" + e.v) ? "match" : "") }));
+    return drawGraph({ nodes: nodes.concat([{ id: "lblA", x: 200, y: -8, label: "A", r: 0.01 }, { id: "lblB", x: 420, y: -8, label: "B", r: 0.01 }]), edges, h: st.HH });
+  },
+});
+
+/* ---------- 10: Ford-Fulkerson ---------- */
+algo({
+  id: "fordfulkerson", topic: "10", name: "האלגוריתם של פורד-פולקרסון וחתך מינימלי",
+  tag: "מזרימים לאורך מסלולי שיפור ברשת השיורית, עד שאין עוד.", kw: "ford fulkerson זרימה מקסימלית חתך מינימלי רשת שיורית", src: "הרצאה 10, שקף 29",
+  intro: `<b>מה זו זרימה?</b> לכל קשת יש <b>קיבולת</b> ${c("c")}, וכמות הזרימה ${c("f")} עליה צריכה להיות בין 0 ל-${c("c")}. בכל צומת חוץ מ-${c("s")} ו-${c("t")}, מה שנכנס שווה למה שיוצא. מחפשים זרימה מקסימלית מ-${c("s")} ל-${c("t")}.<br><b>הרשת השיורית ${c("Gf")}</b> אומרת כמה עוד אפשר להזרים על כל קשת (${c("c − f")} קדימה), ועל כמה אפשר "להתחרט" (${c("f")} אחורה).<br><b>פורד-פולקרסון:</b> כל עוד יש מסלול מ-${c("s")} ל-${c("t")} ב-${c("Gf")}, מגדילים את הזרימה לאורכו לפי צוואר הבקבוק, כלומר הקיבולת הקטנה ביותר במסלול. (את המסלול אפשר למצוא עם BFS או עם DFS. בחרו למעלה וספרו סיבובים.)<br><b>חתך מינימלי:</b> בסוף, ${c("S")} הם הצמתים שאפשר להגיע אליהם מ-${c("s")} ב-${c("Gf")}. הקשתות מ-${c("S")} ל-${c("T")} הן חתך שהקיבולת שלו שווה לזרימה, ולכן זרימה מקסימלית = חתך מינימלי.`,
+  code: ["MaximumFlow(G=(V,E), s,t ∈ V, c: E → Q+)", "  Initialize f to have 0 flow on all edges of G.", "  While forever Do", "    Construct Gf.", "    Compute path P in Gf from s to t.", "    If P = ∅ Return f.", "    Increase f according to P.", "  End While.", "", "Minimum cut:", "  S = the vertices reachable from s in Gf,  T = V \\ S."],
+  legend: [["e:flow","יש זרימה"],["e:path","המסלול ב-Gf"],["e:cut","קשתות החתך"],["S","S"],["T","T"]],
+  opts: [{ ...PATHOPT, choices: [["BFS", "BFS", "אדמונדס-קרפ"], ["DFS", "DFS"]] }],
+  inputs: gInputs("1->2 5\n1->3 7\n1->4 4\n2->3 1\n3->2 1\n2->5 3\n3->4 2\n3->5 4\n3->6 5\n4->6 4\n5->6 1\n6->5 1\n5->7 9\n6->7 6", { weighted: true, directed: true, startLabel: "מקור s", extra: [{ key: "t", label: "יעד t", def: "7", size: 5 }] }),
+  parse(i) {
+    const o = gParse(i, { weighted: true, directed: true });
+    const t = String(i.t).trim(); if (!o.g.nodes.includes(t)) throw `הצומת "${esc(t)}" לא מופיע בגרף.`;
+    if (t === o.s) throw "s ו-t צריכים להיות שונים.";
+    o.t = t; return o;
+  },
+  run(input) {
+    const { g, s, t } = input;
+    const pos = gPos(g, s, input, PRE.l10), S = [], f = {};
+    g.edges.forEach(e => f[e.u + ">" + e.v] = 0);
+    const cap = (u, v) => { const e = g.edges.find(e => e.u === u && e.v === v); return e ? e.w : 0; };
+    const fl = (u, v) => f[u + ">" + v] || 0;
+    const resid = () => { const R = []; const pairs = new Set(); g.edges.forEach(e => { pairs.add(e.u + ">" + e.v); pairs.add(e.v + ">" + e.u); });
+      pairs.forEach(p => { const [u, v] = p.split(">"); const r = cap(u, v) - fl(u, v) + fl(v, u); if (r > 0) R.push({ u, v, r }); }); return R; };
+    let value = 0;
+    const snap = (line, msg, x = {}) => S.push({ line, msg, g, pos, f: { ...f }, R: x.R, path: x.path, cut: x.cut, s, t, vars: [["|f|", value], ...(x.b !== undefined ? [["צוואר בקבוק", x.b]] : [])] });
+    snap(1, `מתחילים עם זרימה 0 על כל הקשתות. על כל קשת כתוב ${c("f/c")}, כלומר זרימה/קיבולת.`);
+    let it = 0;
+    while (true) {
+      it++;
+      const R = resid();
+      snap(3, `סיבוב ${it}: בונים את הרשת השיורית ${c("Gf")} (מימין). על כל קשת שם כתוב כמה עוד אפשר להזרים עליה.`, { R });
+      const adj = {}; R.forEach(e => (adj[e.u] = adj[e.u] || []).push(e.v)); for (const k in adj) adj[k] = sortIds(adj[k]);
+      const par = findPath(adj, s, t, input.__opt.pm);
+      if (par[t] === undefined) {
+        const Sset = Object.keys(par), Tset = g.nodes.filter(v => !Sset.includes(v));
+        snap(5, `אין מסלול מ-${c("s")} ל-${c("t")} ב-${c("Gf")}, אז הזרימה מקסימלית. <b>ערך הזרימה: ${value}</b>, אחרי ${it - 1} סיבובי שיפור עם ${input.__opt.pm}.`, { R });
+        const cutE = g.edges.filter(e => Sset.includes(e.u) && Tset.includes(e.v));
+        const cutCap = cutE.reduce((a, e) => a + e.w, 0);
+        snap(10, `החתך: ${c("S = {" + sortIds(Sset).join(",") + "}")} הם הצמתים שאפשר להגיע אליהם מ-${s} ב-${c("Gf")}, ו-${c("T = {" + Tset.join(",") + "}")}. הקשתות מ-S ל-T (ורוד מקווקו): ${c(cutE.map(e => `${e.u}→${e.v}:${e.w}`).join(", "))}. סכום הקיבולות שלהן הוא ${cutCap}, <b>בדיוק כמו ערך הזרימה</b>. לכן זה חתך מינימלי.`, { R, cut: { S: Sset, edges: cutE.map(e => e.u + ">" + e.v) } });
+        break;
+      }
+      const path = []; for (let v = t; v !== null; v = par[v]) path.unshift(v);
+      const b = Math.min(...path.slice(1).map((v, k) => R.find(e => e.u === path[k] && e.v === v).r));
+      snap(4, `${input.__opt.pm} מצא ב-${c("Gf")} את המסלול ${c(path.join(" → "))}. צוואר הבקבוק, כלומר הקיבולת השיורית הקטנה ביותר במסלול, הוא ${c(b)}.`, { R, path, b });
+      for (let k = 0; k + 1 < path.length; k++) {
+        const u = path[k], v = path[k + 1];
+        let left = b;
+        const back = Math.min(left, fl(v, u)); if (back > 0) { f[v + ">" + u] -= back; left -= back; }
+        if (left > 0) f[u + ">" + v] += left;
+      }
+      value += b;
+      snap(6, `מגדילים את הזרימה לאורך המסלול ב-${b} (משמאל, ב-G). אם המסלול עבר על קשת "אחורה", מבטלים זרימה שהייתה עליה. עכשיו ${c(`|f| = ${value}`)}.`, { R, path, b });
+    }
+    return S;
+  },
+  render(st) {
+    const P = (u, v) => st.path && st.path.some((x, k) => x === u && st.path[k + 1] === v);
+    const nodeCls = v => st.cut ? (st.cut.S.includes(v) ? "S" : "T") : (v === st.s || v === st.t ? "cmp" : "");
+    const w = 330, sc = w / 620;
+    const pos = {}; for (const k in st.pos) pos[k] = { x: 14 + st.pos[k].x * sc * 0.95, y: st.pos[k].y * 0.92 + 10 };
+    const left = drawGraph({ w, h: 330, r: 17,
+      nodes: st.g.nodes.map(v => ({ id: v, x: pos[v].x, y: pos[v].y, cls: nodeCls(v) })),
+      edges: st.g.edges.map(e => ({ u: e.u, v: e.v, dir: true, bend: st.g.edges.some(f => f.u === e.v && f.v === e.u) ? 22 : 0, label: `${st.f[e.u + ">" + e.v]}/${e.w}`, cls: st.cut && st.cut.edges.includes(e.u + ">" + e.v) ? "cut" : (st.f[e.u + ">" + e.v] > 0 ? "flow" : "") })) });
+    let right = `<div style="color:var(--muted);text-align:center;padding:40px 0">—</div>`;
+    if (st.R) {
+      const has = (u, v) => st.R.some(e => e.u === u && e.v === v);
+      right = drawGraph({ w, h: 330, r: 17,
+        nodes: st.g.nodes.map(v => ({ id: v, x: pos[v].x, y: pos[v].y, cls: st.path && st.path.includes(v) ? "sel" : nodeCls(v) })),
+        edges: st.R.map(e => ({ u: e.u, v: e.v, dir: true, label: e.r, bend: has(e.v, e.u) ? 22 : 0, cls: P(e.u, e.v) ? "path" : "" })) });
+    }
+    return `<div class="two"><div><div class="t">G – זרימה/קיבולת</div>${left}</div><div><div class="t">Gf – הרשת השיורית</div>${right}</div></div>`;
+  },
+});
+/* ---------- 11: Vertex cover -> SAT ---------- */
+const PRE11 = { 1: [8, 55], 2: [15, 48], 3: [15, 55], 4: [15, 61], 5: [23, 55] };
+function findCover(g, k) {
+  const n = g.nodes.length;
+  for (let mask = 0; mask < (1 << n); mask++) {
+    const set = g.nodes.filter((_, i) => mask & (1 << i));
+    if (set.length > k) continue;
+    if (g.edges.every(e => set.includes(e.u) || set.includes(e.v))) return set;
+  }
+  return null;
+}
+algo({
+  id: "vc2sat", topic: "11", name: "רדוקציה מכיסוי צמתים ל-SAT",
+  tag: "בונים נוסחה שספיקה בדיוק כשיש כיסוי צמתים בגודל k.", kw: "vertex cover sat כיסוי צמתים רדוקציה", src: "הרצאה 11, שקף 40",
+  intro: `<b>כיסוי צמתים:</b> בהינתן גרף ${c("G")} ומספר ${c("k")}, האם יש קבוצה של ${c("k")} צמתים כך שכל קשת נוגעת לפחות באחד מהם?<br><b>הרדוקציה:</b> בונים בזמן פולינומי נוסחת CNF ${c("φ")}, כך ש-${c("φ")} ספיקה <b>אם ורק אם</b> ל-${c("G")} יש כיסוי בגודל ${c("k")}. המשתנה ${c("x_{i,p}")} אומר "הצומת ${c("i")} הוא הצומת מספר ${c("p")} בכיסוי".<br>פסוקיות ${c("A")}: לכל מקום ${c("p")} נבחר לכל היותר צומת אחד. פסוקיות ${c("B")}: כל קשת מכוסה.<br><b>זמן הבנייה:</b> ${c("O(n²k) + O(mk) = O(n³)")}.`,
+  codeHe: true,
+  code: ["קלט: גרף `G=(V={1,…,n},E)` ומספר `k`.", "משתנים: `x(i,p)` לכל `i∈{1,…,n}` ו-`p∈{1,…,k}` (סה״כ `nk` משתנים).", "לכל `p∈{1,…,k}` ולכל `i<j`:", "`A(i,j,p) = (¬x(i,p) ∨ ¬x(j,p))`", "(שני צמתים שונים לא יכולים להיות שניהם הצומת ה-`p` בכיסוי)", "לכל קשת `(i,j)∈E`:", "`B(i,j) = (x(i,1) ∨ … ∨ x(i,k) ∨ x(j,1) ∨ … ∨ x(j,k))`", "(איזשהו צומת בכיסוי מכסה את הקשת)", "`φ = (∧ A(i,j,p)) ∧ (∧ B(i,j))`", "ל-`G` יש כיסוי צמתים בגודל `≤ k` ⇔ `φ` ספיקה."],
+  legend: [["cur","נבנה עכשיו"],["sel","בכיסוי"]],
+  inputs: [{ key: "g", label: "הגרף (קשת בכל שורה)", def: "1-2\n1-4\n3-4\n3-5\n4-5\n2-5", multi: true, hint: `צמתים ממוספרים ${c("1…n")}, עד 6 צמתים.` }, { key: "k", label: "k", def: "3", size: 4 }],
+  parse(i) {
+    const g = parseGraph(i.g, {}); const k = parseInt1(i.k, "k");
+    if (g.nodes.length > 6) throw "עד 6 צמתים, אחרת יש יותר מדי פסוקיות להראות.";
+    if (k < 1 || k > 4) throw "k צריך להיות בין 1 ל-4.";
+    return { g, k };
+  },
+  run(input) {
+    const { g, k } = input;
+    const V = g.nodes, n = V.length, S = [], pos = input.__default ? scalePos(PRE11, 300, 240, 34) : layeredLayout(V, g.edges, V[0], 300, 240);
+    const X = (i, p) => `x(${i},${p})`;
+    const clauses = [];
+    const snap = (line, msg, x = {}) => S.push({ line, msg, V, k, g, pos, clauses: clauses.slice(), ...x });
+    snap(0, `הקלט: גרף עם ${c(`n = ${n}`)} צמתים ו-${g.edges.length} קשתות, ו-${c(`k = ${k}`)}. רוצים לבנות נוסחה שספיקה בדיוק כשיש כיסוי בגודל ${k}.`);
+    snap(1, `יוצרים ${c(`n·k = ${n * k}`)} משתנים, טבלה של צמתים × מקומות בכיסוי. ${c("x(i,p) = 1")} פירושו שהצומת ${c("i")} נבחר להיות במקום ${c("p")} בכיסוי.`, { hlGrid: "all" });
+    for (let p = 1; p <= k; p++) {
+      const add = [];
+      for (let a = 0; a < n; a++) for (let b = a + 1; b < n; b++) add.push(`(¬${X(V[a], p)} ∨ ¬${X(V[b], p)})`);
+      const from = clauses.length; clauses.push(...add);
+      snap([2, 3, 4], `פסוקיות ${c("A")} עבור ${c(`p = ${p}`)}: לכל זוג צמתים, לא ייתכן ששניהם יהיו במקום ${p}. נוספו ${add.length} פסוקיות.`, { hlCol: p, newFrom: from });
+    }
+    for (const e of g.edges) {
+      const lits = []; for (const v of [e.u, e.v]) for (let p = 1; p <= k; p++) lits.push(X(v, p));
+      const from = clauses.length; clauses.push(`(${lits.join(" ∨ ")})`);
+      snap([5, 6, 7], `פסוקית ${c(`B(${e.u},${e.v})`)}: הקשת ${c(`{${e.u},${e.v}}`)} מכוסה אם ${e.u} או ${e.v} נמצא באיזשהו מקום בכיסוי.`, { hlRows: [e.u, e.v], hlEdge: edgeKey(e.u, e.v), newFrom: from });
+    }
+    snap(8, `${c("φ")} היא ה-AND של כל ${clauses.length} הפסוקיות: ${k * n * (n - 1) / 2} פסוקיות ${c("A")} ו-${g.edges.length} פסוקיות ${c("B")}. הבנייה פולינומית.`);
+    const cover = input.__default ? ["3", "1", "5"] : findCover(g, k);
+    if (cover) {
+      const assign = {}; cover.forEach((v, p) => assign[X(v, p + 1)] = 1);
+      snap(9, `<b>בדיקה בכיוון אחד:</b> ל-G יש כיסוי בגודל ${cover.length}${input.__default ? " (כמו בהרצאה)" : ""}: ${c("{" + cover.join(",") + "}")}. נגדיר ${cover.map((v, p) => c(`x(${v},${p + 1}) = 1`)).join(", ")}, וכל השאר 0. אז בכל עמודה יש לכל היותר 1 (פסוקיות A מתקיימות), ולכל קשת יש קצה עם 1 בשורה שלו (פסוקיות B מתקיימות). <b>φ ספיקה.</b>`, { cover, assign, sat: true });
+    } else {
+      snap(9, `<b>ל-G אין כיסוי צמתים בגודל ${k}</b> (בדקנו את כל האפשרויות). לכן לפי הרדוקציה ${c("φ")} לא ספיקה: כל השמה מפרה פסוקית A או פסוקית B.`, { sat: false });
+    }
+    return S;
+  },
+  render(st) {
+    const nc = {}; (st.cover || []).forEach(v => nc[v] = "sel"); (st.hlRows || []).forEach(v => nc[v] = "cur");
+    const ec = {}; if (st.hlEdge) ec[st.hlEdge] = "cur";
+    if (st.cover) st.g.edges.forEach(e => ec[edgeKey(e.u, e.v)] = "tree");
+    const graph = drawGraph({ w: 300, h: 260, nodes: st.V.map(v => ({ id: v, x: st.pos[v].x, y: st.pos[v].y, cls: nc[v] || "" })), edges: st.g.edges.map(e => ({ u: e.u, v: e.v, cls: ec[edgeKey(e.u, e.v)] || "" })) });
+    let grid = `<table style="border-collapse:collapse;margin:0 auto;direction:ltr;font-size:13px"><tr><td></td>${Array.from({ length: st.k }, (_, p) => `<td style="text-align:center;color:var(--muted);padding:2px 6px">p=${p + 1}</td>`).join("")}</tr>`;
+    for (const v of st.V) {
+      grid += `<tr><td style="color:var(--muted);padding:2px 6px">i=${esc(v)}</td>`;
+      for (let p = 1; p <= st.k; p++) {
+        const key = `x(${v},${p})`, val = st.assign ? (st.assign[key] ? 1 : 0) : "";
+        const on = st.hlGrid === "all" || st.hlCol === p || (st.hlRows || []).includes(v);
+        grid += `<td style="border:1px solid var(--line);width:58px;height:30px;text-align:center;font-size:11.5px;background:${val === 1 ? "var(--green-soft)" : on ? "var(--amber-soft)" : "#fff"};font-weight:${val === 1 ? 700 : 400}">${key}${val !== "" ? ` = ${val}` : ""}</td>`;
+      }
+      grid += "</tr>";
+    }
+    grid += "</table>";
+    const fm = st.clauses.length ? `<div class="formula">φ = ${st.clauses.map((cl, i) => `<span class="${st.newFrom !== undefined && i >= st.newFrom ? "new" : ""}">${esc(cl)}</span>`).join(" ∧ ")}</div>` : "";
+    return `<div class="two"><div>${graph}</div><div style="align-self:center">${grid}</div></div>${fm ? `<div style="font-size:13px;color:var(--muted);margin-top:8px">הנוסחה עד עכשיו (${st.clauses.length} פסוקיות):</div>${fm}` : ""}`;
+  },
+});
+
+/* ---------- 12: 3-SAT -> Vertex cover ---------- */
+function parseCNF(text, { maxLen = 3, maxClauses = 5, maxVars = 4 } = {}) {
+  const t = String(text).replace(/\s+/g, " ").trim();
+  if (!t) throw "צריך לכתוב נוסחה.";
+  const parts = t.split(/\)\s*(?:∧|&|\^|and)?\s*\(|∧|&/i).map(s => s.replace(/[()]/g, "").trim()).filter(Boolean);
+  const clauses = parts.map(p => p.split(/∨|\||\bor\b|,|\+/i).map(s => s.trim()).filter(Boolean).map(l => {
+    const m = l.match(/^(¬|!|~|-|not\s+)?\s*([A-Za-z][A-Za-z0-9_]*)$/i);
+    if (!m) throw `לא הבנתי את הליטרל "${esc(l)}". כתבו למשל ${c("x")} או ${c("¬x")} (או ${c("!x")}).`;
+    return { v: m[2], neg: !!m[1] };
+  }));
+  clauses.forEach(cl => { if (cl.length < 1 || cl.length > maxLen) throw `בכל פסוקית צריכים להיות 1 עד ${maxLen} ליטרלים.`; });
+  if (clauses.length > maxClauses) throw `עד ${maxClauses} פסוקיות, כדי שהתמונה תהיה ברורה.`;
+  const vars = [...new Set(clauses.flat().map(l => l.v))].sort();
+  if (vars.length > maxVars) throw `עד ${maxVars} משתנים.`;
+  return { clauses, vars };
+}
+const litS = l => (l.neg ? "¬" : "") + l.v;
+algo({
+  id: "sat2vc", topic: "12", name: "הרדוקציה מ-3SAT לכיסוי צמתים",
+  tag: "משתנה = קשת, פסוקית = משולש, ו-k = 2m + n.", kw: "3sat vertex cover כיסוי צמתים רדוקציה np שלמה", src: "הרצאה 12, שקף 25",
+  intro: `<b>המטרה:</b> להראות שכיסוי צמתים היא NP-שלמה, בעזרת רדוקציה <b>מ-3-SAT</b> אליה. בהינתן נוסחת 3-CNF ${c("φ")} עם ${c("n")} משתנים ו-${c("m")} פסוקיות, בונים גרף ${c("G")} ומספר ${c("k = 2m + n")}, כך ש-${c("φ")} ספיקה <b>אם ורק אם</b> ב-${c("G")} יש כיסוי צמתים בגודל לכל היותר ${c("k")}.<br><b>הרעיון:</b> כל משתנה הוא קשת ${c("x — ¬x")}, ובחירת צומת אחד ממנה היא בחירת ערך. כל פסוקית היא משולש, ומכיסוי של משולש צריך לבחור 2 מ-3 צמתים. הצומת שלא נבחר במשולש הוא הליטרל ש"מספק" את הפסוקית.<br><b>זמן הבנייה:</b> ${c("O(m + n)")}.`,
+  codeHe: true,
+  code: ["קלט: נוסחת 3-CNF `φ` עם משתנים `x1,…,xn` ופסוקיות `C1,…,Cm`.", "כל משתנה `xi` מיוצג ע״י קשת בין הצמתים `xi` ו-`¬xi`.", "כל פסוקית `Cj` מיוצגת ע״י משולש.", "מחברים את הצומת ה-`r` במשולש של `Cj` לצומת של הליטרל ה-`r` ב-`Cj`.", "אם ב-`Cj` פחות משלושה ליטרלים – מחברים את הצמתים הנותרים", "במשולש אל הליטרל האחרון ב-`Cj`.", "`k = 2m + n`", "`φ` ספיקה ⇔ ב-`G` יש כיסוי צמתים בגודל לכל היותר `k`."],
+  legend: [["cur","נבנה עכשיו"],["sel","בכיסוי"],["e:tree","מכוסה"]],
+  inputs: [{ key: "f", label: "הנוסחה φ", def: "(x ∨ ¬y ∨ ¬z) ∧ (¬x ∨ y ∨ z) ∧ (¬y ∨ z) ∧ (¬x ∨ y ∨ ¬z)", size: 46, hint: `שלילה: ${c("¬")} או ${c("!")}. "או": ${c("∨")} או ${c("|")}. "וגם": ${c("∧")} או ${c("&")}. עד 5 פסוקיות ו-4 משתנים.` }],
+  parse(i) { return parseCNF(i.f); },
+  run(input) {
+    const { clauses, vars } = input;
+    const n = vars.length, m = clauses.length, S = [];
+    const W = 640, gapV = W / n;
+    const nodes = {}, edges = [];
+    vars.forEach((v, k) => { const cx = gapV * (k + 0.5); nodes["L:" + v] = { x: cx - 32, y: 40, label: v }; nodes["L:¬" + v] = { x: cx + 32, y: 40, label: "¬" + v }; });
+    const gapC = W / m;
+    clauses.forEach((cl, j) => { const cx = gapC * (j + 0.5); [[cx, 175], [cx - 38, 245], [cx + 38, 245]].forEach(([x, y], r) => nodes[`C${j}:${r}`] = { x, y, label: r < cl.length ? litS(cl[r]) : litS(cl[cl.length - 1]), r: 17, sub: r === 0 ? `C${j + 1}` : "", subDy: -28 }); });
+    const shown = new Set(), E = [];
+    const snap = (line, msg, x = {}) => S.push({ line, msg, nodes, shown: [...shown], E: E.slice(), ...x, vars: [["n", n], ["m", m], ...(x.k ? [["k", x.k]] : [])] });
+    snap(0, `הנוסחה: ${c(clauses.map(cl => "(" + cl.map(litS).join(" ∨ ") + ")").join(" ∧ "))}. יש ${c(`n = ${n}`)} משתנים ו-${c(`m = ${m}`)} פסוקיות.`);
+    for (const v of vars) {
+      shown.add("L:" + v); shown.add("L:¬" + v); E.push({ u: "L:" + v, v: "L:¬" + v, t: "var" });
+      snap(1, `המשתנה ${c(v)} הופך לקשת ${c(`${v} — ¬${v}`)}. כדי לכסות אותה, חייבים לבחור לפחות אחד מהשניים. הבחירה תגיד אם ${v} הוא 1 או 0.`, { hl: ["L:" + v, "L:¬" + v] });
+    }
+    clauses.forEach((cl, j) => {
+      const ids = [0, 1, 2].map(r => `C${j}:${r}`); ids.forEach(id => shown.add(id));
+      E.push({ u: ids[0], v: ids[1], t: "tri" }, { u: ids[1], v: ids[2], t: "tri" }, { u: ids[0], v: ids[2], t: "tri" });
+      snap(2, `הפסוקית ${c("C" + (j + 1) + " = (" + cl.map(litS).join(" ∨ ") + ")")} הופכת למשולש. כדי לכסות משולש, חייבים לבחור לפחות 2 מ-3 הצמתים שלו.`, { hl: ids });
+      const conn = ids.map((id, r) => ({ u: id, v: "L:" + litS(r < cl.length ? cl[r] : cl[cl.length - 1]), t: "conn" }));
+      E.push(...conn);
+      snap(cl.length < 3 ? [3, 4, 5] : 3, `מחברים כל צומת במשולש לליטרל שלו בשורה העליונה.${cl.length < 3 ? ` בפסוקית יש רק ${cl.length} ליטרלים, אז הצמתים הנותרים במשולש מתחברים לליטרל האחרון, ${c(litS(cl[cl.length - 1]))}.` : ""}`, { hl: ids, hlE: conn.map(e => e.u + "|" + e.v) });
+    });
+    const k = 2 * m + n;
+    snap(6, `${c(`k = 2m + n = 2·${m} + ${n} = ${k}`)}. זה המינימום האפשרי: צומת אחד מכל קשת משתנה, ושני צמתים מכל משולש.`, { k });
+    let sat = input.__default ? { x: false, y: false, z: true } : null;
+    for (let mask = 0; mask < (1 << n) && !sat; mask++) {
+      const a = {}; vars.forEach((v, i) => a[v] = !!(mask & (1 << i)));
+      if (clauses.every(cl => cl.some(l => a[l.v] !== l.neg))) sat = a;
+    }
+    if (sat) {
+      const cover = new Set();
+      vars.forEach(v => cover.add(sat[v] ? "L:" + v : "L:¬" + v));
+      clauses.forEach((cl, j) => { const r = cl.findIndex(l => sat[l.v] !== l.neg); [0, 1, 2].filter(x => x !== r).forEach(x => cover.add(`C${j}:${x}`)); });
+      snap(7, `<b>φ ספיקה</b>, למשל ע״י ${c(vars.map(v => `${v}=${sat[v] ? 1 : 0}`).join(", "))}. בונים כיסוי: מכל קשת משתנה בוחרים את הליטרל ה"אמיתי", ומכל משולש בוחרים את כל הצמתים חוץ מאחד שהליטרל שלו מתקיים. הקשת שיוצאת מהצומת שלא נבחר מכוסה ע״י צומת הליטרל. גודל הכיסוי: ${cover.size} = k, וכל הקשתות מכוסות.`, { k, cover: [...cover] });
+    } else {
+      snap(7, `<b>φ לא ספיקה</b> (בדקנו את כל ${2 ** n} ההשמות). לכן לפי הרדוקציה, אין ב-G כיסוי צמתים בגודל ${k}.`, { k });
+    }
+    return S;
+  },
+  render(st) {
+    const cov = new Set(st.cover || []), hl = new Set(st.hl || []), hlE = new Set(st.hlE || []);
+    const nodes = st.shown.map(id => ({ id, ...st.nodes[id], cls: cov.has(id) ? "sel" : hl.has(id) ? "cur" : "" }));
+    const edges = st.E.map(e => ({ u: e.u, v: e.v, cls: hlE.has(e.u + "|" + e.v) ? "cur" : (st.cover ? (cov.has(e.u) || cov.has(e.v) ? "tree" : "cut") : (e.t === "conn" ? "dim" : "")) }));
+    return drawGraph({ w: 640, h: 285, nodes, edges, r: 20 });
+  },
+});
+/* ---------- shared: grid of x(i,p) + formula panel ---------- */
+function gridHtml(rows, cols, cell) {
+  let h = `<table class="table" data-k="grid"><tr><td></td>${cols.map(p => `<td class="h" style="text-align:center">p=${p}</td>`).join("")}</tr>`;
+  for (const r of rows) h += `<tr><td class="h">${esc(r)}</td>${cols.map(p => { const [cls, txt] = cell(r, p); return `<td class="v ${cls}" style="font-size:11px;min-width:54px">${txt}</td>`; }).join("")}</tr>`;
+  return h + "</table>";
+}
+function formulaHtml(clauses, newFrom, label = "φ") {
+  if (!clauses.length) return "";
+  return `<div class="sublabel" data-k="fl">הנוסחה עד עכשיו: ${clauses.length} פסוקיות</div><div class="formula" data-k="fm">${label} = ${clauses.map((cl, i) => `<span class="${newFrom !== undefined && i >= newFrom ? "new" : ""}">${esc(cl)}</span>`).join(" ∧ ")}</div>`;
+}
+function algoBefore(beforeId, def) { const i = ALGOS.findIndex(a => a.id === beforeId); if (i < 0) ALGOS.push(def); else ALGOS.splice(i, 0, def); }
+
+/* ---------- 11: Long path -> SAT ---------- */
+function findPathK(g, s, t, k) {
+  const adj = {}; g.nodes.forEach(v => adj[v] = neighbors(g, v));
+  const path = [s];
+  const rec = v => { if (path.length === k + 1) return v === t; for (const u of adj[v]) if (!path.includes(u)) { path.push(u); if (rec(u)) return true; path.pop(); } return false; };
+  return rec(s) ? path.slice() : null;
+}
+algo({
+  id: "longpath2sat", topic: "11", name: "רדוקציה ממסלול ארוך ל-SAT",
+  tag: "בונים נוסחה שספיקה בדיוק כשיש מסלול פשוט מ-s ל-t עם k קשתות.", kw: "long path sat מסלול ארוך רדוקציה np", src: "הרצאה 11, שקף 30",
+  intro: `<b>מסלול ארוך:</b> בהינתן גרף ${c("G")}, צמתים ${c("s")} ו-${c("t")} ומספר ${c("k")}: האם יש מסלול פשוט מ-${c("s")} ל-${c("t")} באורך ${c("k")}?<br><b>הרדוקציה:</b> מסלול באורך ${c("k")} עובר דרך ${c("k+1")} צמתים, אז בוחרים צומת לכל מקום ${c("p")} במסלול. המשתנה ${c("x(i,p)")} אומר "הצומת ${c("i")} הוא הצומת מספר ${c("p")} במסלול".<br>${c("A")}: בכל מקום יש צומת. ${c("B")}: אותו צומת לא מופיע פעמיים. ${c("C")}: שני צמתים בלי קשת ביניהם לא באים אחד אחרי השני. ובנוסף ${c("s")} ראשון ו-${c("t")} אחרון.<br><b>זמן הבנייה:</b> ${c("O(n³)")}.`,
+  codeHe: true,
+  code: ["קלט: גרף `G=(V={1,…,n},E)`, צמתים `s,t` ומספר `k`.", "משתנים: `x(i,p)` לכל `i∈{1,…,n}` ו-`p∈{1,…,k+1}`.", "לכל `p`: `A(p) = (x(1,p) ∨ … ∨ x(n,p))`", "(איזשהו צומת נבחר להיות צומת מספר `p` במסלול)", "לכל `i` ולכל `p<q`: `B(i,p,q) = (¬x(i,p) ∨ ¬x(i,q))`", "(צומת לא יכול להיות גם במקום `p` וגם במקום `q`)", "לכל `(i,j)∉E` ולכל `p`: `C(i,j,p) = (¬x(i,p) ∨ ¬x(j,p+1))`", "(צמתים לא מחוברים לא יכולים להיות סמוכים במסלול)", "`φ = (∧A) ∧ (∧B) ∧ (∧C) ∧ x(s,1) ∧ x(t,k+1)`", "ל-`G` יש מסלול פשוט מ-`s` ל-`t` באורך `k` ⇔ `φ` ספיקה."],
+  legend: [["cur", "נבנה עכשיו"], ["sel", "במסלול"], ["e:path", "המסלול"]],
+  inputs: [{ key: "g", label: "הגרף (קשת בכל שורה)", def: "1-2\n1-4\n3-4\n3-5\n4-5\n2-5", multi: true, hint: "עד 5 צמתים." }, { key: "s", label: "s", def: "1", size: 4 }, { key: "t", label: "t", def: "2", size: 4 }, { key: "k", label: "k", def: "4", size: 4 }],
+  parse(i) {
+    const g = parseGraph(i.g, {}); const k = parseInt1(i.k, "k");
+    if (g.nodes.length > 5) throw "עד 5 צמתים, אחרת יש יותר מדי פסוקיות להראות.";
+    const s = String(i.s).trim(), t = String(i.t).trim();
+    if (!g.nodes.includes(s) || !g.nodes.includes(t)) throw "s ו-t צריכים להיות צמתים בגרף.";
+    if (k < 1 || k > g.nodes.length - 1) throw `k צריך להיות בין 1 ל-${g.nodes.length - 1}.`;
+    return { g, s, t, k };
+  },
+  run(input) {
+    const { g, s, t, k } = input, V = g.nodes, n = V.length, P = Array.from({ length: k + 1 }, (_, i) => i + 1);
+    const pos = input.__default ? scalePos(PRE11, 300, 240, 34) : layeredLayout(V, g.edges, s, 300, 240);
+    const X = (i, p) => `x(${i},${p})`, clauses = [], S = [];
+    const snap = (line, msg, x = {}) => S.push({ line, msg, g, V, P, pos, clauses: clauses.slice(), ...x });
+    snap(0, `הקלט: ${c(`s = ${s}`)}, ${c(`t = ${t}`)}, ${c(`k = ${k}`)}. מחפשים מסלול עם ${k} קשתות, כלומר ${k + 1} צמתים.`);
+    snap(1, `יוצרים משתנה לכל צומת ולכל מקום במסלול: ${n}·${k + 1} = ${n * (k + 1)} משתנים.`, { hl: "all" });
+    for (const p of P) { const from = clauses.length; clauses.push(`(${V.map(i => X(i, p)).join(" ∨ ")})`); snap([2, 3], `${c(`A(${p})`)}: במקום ${p} במסלול חייב להיות איזשהו צומת.`, { col: p, newFrom: from }); }
+    for (const i of V) {
+      const from = clauses.length;
+      for (let p = 1; p <= k + 1; p++) for (let q = p + 1; q <= k + 1; q++) clauses.push(`(¬${X(i, p)} ∨ ¬${X(i, q)})`);
+      snap([4, 5], `פסוקיות ${c(`B(${i},p,q)`)}: הצומת ${i} לא יכול להופיע בשני מקומות שונים. נוספו ${clauses.length - from}.`, { row: i, newFrom: from });
+    }
+    const non = [];
+    for (const i of V) for (const j of V) if (i !== j && !g.edges.some(e => (e.u === i && e.v === j) || (e.u === j && e.v === i))) non.push([i, j]);
+    const pairs = non.filter(([i, j]) => sortIds([i, j])[0] === i);
+    for (const [i, j] of pairs) {
+      const from = clauses.length;
+      for (const [a, b] of [[i, j], [j, i]]) for (let p = 1; p <= k; p++) clauses.push(`(¬${X(a, p)} ∨ ¬${X(b, p + 1)})`);
+      snap([6, 7], `אין קשת בין ${i} ל-${j}, אז הם לא יכולים לבוא אחד אחרי השני במסלול (בשני הכיוונים). נוספו ${clauses.length - from}.`, { rows: [i, j], non: [i, j], newFrom: from });
+    }
+    { const from = clauses.length; clauses.push(`(${X(s, 1)})`, `(${X(t, k + 1)})`); snap(8, `ולבסוף: ${c(s)} הוא הצומת הראשון ו-${c(t)} האחרון. סך הכול ${clauses.length} פסוקיות, בזמן פולינומי.`, { cells: [[s, 1], [t, k + 1]], newFrom: from }); }
+    const path = input.__default ? ["1", "4", "3", "5", "2"] : findPathK(g, s, t, k);
+    if (path) snap(9, `<b>יש מסלול:</b> ${c(path.join(" → "))}${input.__default ? " (כמו בהרצאה)" : ""}. נגדיר ${path.map((v, p) => c(`x(${v},${p + 1})=1`)).join(", ")} וכל השאר 0, וכל הפסוקיות מתקיימות. <b>φ ספיקה.</b>`, { path });
+    else snap(9, `<b>אין ב-G מסלול פשוט מ-${s} ל-${t} עם ${k} קשתות</b> (בדקנו הכול), ולכן ${c("φ")} לא ספיקה.`);
+    return S;
+  },
+  render(st) {
+    const inPath = (u, v) => st.path && st.path.some((x, i) => (x === u && st.path[i + 1] === v) || (x === v && st.path[i + 1] === u));
+    const nc = {}; (st.rows || []).forEach(v => nc[v] = "cur"); if (st.row) nc[st.row] = "cur"; (st.path || []).forEach(v => nc[v] = "sel");
+    const graph = drawGraph({ w: 300, h: 240, nodes: st.V.map(v => ({ id: v, x: st.pos[v].x, y: st.pos[v].y, cls: nc[v] || "", sub: st.path ? st.path.indexOf(v) + 1 || "" : "" })), edges: st.g.edges.map(e => ({ u: e.u, v: e.v, cls: inPath(e.u, e.v) ? "path" : "" })) });
+    const grid = gridHtml(st.V, st.P, (i, p) => {
+      const val = st.path ? (st.path[p - 1] === i ? 1 : 0) : null;
+      const on = st.hl === "all" || st.col === p || st.row === i || (st.rows || []).includes(i) || (st.cells || []).some(([a, b]) => a === i && b === p);
+      return [val === 1 ? "ok" : on ? "cur" : "", `x(${esc(i)},${p})${val !== null ? "=" + val : ""}`];
+    });
+    return `<div class="two" data-k="top"><div>${graph}</div><div style="align-self:center;overflow-x:auto">${grid}</div></div>${formulaHtml(st.clauses, st.newFrom)}`;
+  },
+});
+
+/* ---------- 12: SAT -> 3SAT ---------- */
+algoBefore("sat2vc", {
+  id: "sat23sat", topic: "12", name: "הרדוקציה מ-SAT ל-3SAT",
+  tag: "כל פסוקית ארוכה הופכת לשרשרת של פסוקיות עם 3 ליטרלים, בעזרת משתנים חדשים y.", kw: "sat 3sat 3-sat רדוקציה np שלמה פסוקית ארוכה", src: "הרצאה 12, שקף 17",
+  intro: `<b>3-SAT:</b> בעיית SAT שבה בכל פסוקית יש לכל היותר 3 ליטרלים. כדי להראות שהיא NP-שלמה, עושים רדוקציה <b>מ-SAT</b> אליה.<br><b>הרעיון:</b> פסוקית ארוכה ${c("(α1 ∨ α2 ∨ … ∨ αk)")} מוחלפת בשרשרת ${c("(α1 ∨ α2 ∨ y1) ∧ (α3 ∨ ¬y1 ∨ y2) ∧ … ∧ (αk-1 ∨ αk ∨ ¬yk-3)")}. כל ${c("y")} "מעביר את האחריות" לפסוקית הבאה בשרשרת. אם אחד הליטרלים המקוריים נכון, אפשר לבחור ערכים ל-${c("y")} כך שכל השרשרת מתקיימת. ואם כולם שקריים, משתני ה-${c("y")} לבדם לא יכולים לספק את כל השרשרת.<br><b>זמן הבנייה:</b> ${c("O(k)")} לכל פסוקית, ובסך הכול ${c("O(mn)")}.`,
+  codeHe: true,
+  code: ["קלט: נוסחת CNF `φ`.", "פסוקית עם לכל היותר 3 ליטרלים – נשארת כמו שהיא.", "פסוקית `C = (α1 ∨ α2 ∨ … ∨ αk)` עם `k > 3` מוחלפת ב-`Φ(C)`:", "`(α1 ∨ α2 ∨ y1) ∧ (α3 ∨ ¬y1 ∨ y2) ∧ …`", "`∧ (αi ∨ ¬yi-2 ∨ yi-1) ∧ …`", "`∧ (αk-1 ∨ αk ∨ ¬yk-3)`", "משתני ה-`y` שונים בכל פסוקית.", "הרחבת השמה: אם `C` מסופקת ע״י `α1` או `α2` – כל `y = 0`.", "אם ע״י `αk-1` או `αk` – כל `y = 1`.", "אחרת, ע״י `αi`: `y1…yi-2 = 1`, `yi-1…yk-3 = 0`.", "`φ` ספיקה ⇔ `φ'` ספיקה."],
+  legend: [["cur", "הפסוקית שמטפלים בה"], ["sel", "החוליות שלה"], ["cmp", "מתקיימת"]],
+  inputs: [{ key: "f", label: "הנוסחה φ", def: "(x1 ∨ ¬x2 ∨ x3 ∨ ¬x4 ∨ x5 ∨ x6)", size: 46, hint: `שלילה: ${c("¬")} או ${c("!")}. "או": ${c("∨")} או ${c("|")}. "וגם": ${c("∧")} או ${c("&")}. עד 4 פסוקיות, 8 ליטרלים בפסוקית ו-6 משתנים.` }],
+  parse(i) { return parseCNF(i.f, { maxLen: 8, maxClauses: 4, maxVars: 6 }); },
+  run(input) {
+    const { clauses, vars } = input, S = [], out = [];
+    let yc = 0;
+    const snap = (line, msg, x = {}) => S.push({ line, msg, clauses, out: clauses.length ? out.map(o => ({ ...o })) : [], ...x });
+    snap(0, `הנוסחה: ${clauses.length} פסוקיות. נעבור עליהן אחת-אחת.`);
+    const chains = [];
+    clauses.forEach((cl, j) => {
+      if (cl.length <= 3) { out.push({ lits: cl.map(litS), src: j }); snap(1, `בפסוקית ${j + 1} יש ${cl.length} ליטרלים, אז היא נשארת כמו שהיא.`, { cur: j, newIdx: out.length - 1 }); chains.push(null); return; }
+      const k = cl.length, ys = Array.from({ length: k - 3 }, () => "y" + (++yc)), L = cl.map(litS), chain = [];
+      snap(2, `בפסוקית ${j + 1} יש ${k} ליטרלים, יותר מ-3. מחליפים אותה בשרשרת של ${k - 2} פסוקיות עם ${k - 3} משתנים חדשים: ${c(ys.join(", "))}.`, { cur: j });
+      for (let r = 0; r < k - 2; r++) {
+        let lits, line;
+        if (r === 0) { lits = [L[0], L[1], ys[0]]; line = 3; }
+        else if (r === k - 3) { lits = [L[k - 2], L[k - 1], "¬" + ys[k - 4]]; line = 5; }
+        else { lits = [L[r + 1], "¬" + ys[r - 1], ys[r]]; line = 4; }
+        out.push({ lits, src: j }); chain.push(out.length - 1);
+        snap(line, r === 0 ? `החוליה הראשונה: שני הליטרלים הראשונים ו-${c(ys[0])}.` : r === k - 3 ? `החוליה האחרונה: שני הליטרלים האחרונים ו-${c("¬" + ys[k - 4])}.` : `חוליה באמצע: ליטרל אחד, ${c("¬" + ys[r - 1])} מהחוליה הקודמת, ו-${c(ys[r])} לחוליה הבאה.`, { cur: j, newIdx: out.length - 1 });
+      }
+      chains.push({ ys, chain });
+    });
+    snap(6, `<b>הנוסחה החדשה מוכנה:</b> ${out.length} פסוקיות, ובכל אחת לכל היותר 3 ליטרלים.`);
+    let a = null, best = -1;
+    for (let mask = 0; mask < (1 << vars.length); mask++) {
+      const t = {}; vars.forEach((v, i) => t[v] = !!(mask & (1 << i)));
+      if (!clauses.every(cl => cl.some(l => t[l.v] !== l.neg))) continue;
+      const score = clauses.filter(cl => { const i = cl.findIndex(l => t[l.v] !== l.neg) + 1; return cl.length > 3 && i > 2 && i < cl.length - 1; }).length;
+      if (score > best) { best = score; a = t; }
+    }
+    if (!a) { snap(10, `${c("φ")} לא ספיקה, ולכן גם הנוסחה החדשה לא ספיקה.`); return S; }
+    const val = {}; vars.forEach(v => val[v] = a[v] ? 1 : 0);
+    snap(10, `נבדוק השמה מספקת של ${c("φ")}: ${c(vars.map(v => `${v}=${val[v]}`).join(", "))}. עכשיו נרחיב אותה ל-${c("y")}.`, { val: { ...val } });
+    clauses.forEach((cl, j) => {
+      const ch = chains[j]; if (!ch) return;
+      const k = cl.length, i = cl.findIndex(l => a[l.v] !== l.neg) + 1;
+      let line;
+      if (i <= 2) { ch.ys.forEach(y => val[y] = 0); line = 7; }
+      else if (i >= k - 1) { ch.ys.forEach(y => val[y] = 1); line = 8; }
+      else { ch.ys.forEach((y, t) => val[y] = t + 1 <= i - 2 ? 1 : 0); line = 9; }
+      snap(line, `פסוקית ${j + 1} מסופקת ע״י הליטרל ה-${i}, ${c(litS(cl[i - 1]))}. לכן ${c(ch.ys.map(y => `${y}=${val[y]}`).join(", "))}, וכל החוליות בשרשרת מתקיימות.`, { cur: j, val: { ...val } });
+    });
+    snap(10, `<b>כל הפסוקיות החדשות מתקיימות</b>, ולכן הנוסחה החדשה ספיקה.`, { val: { ...val } });
+    return S;
+  },
+  render(st) {
+    const litV = (l, val) => { if (!val) return null; const neg = l.startsWith("¬"), v = neg ? l.slice(1) : l; return val[v] === undefined ? null : (val[v] === 1) !== neg; };
+    const top = `<div class="sublabel" style="margin-top:0">φ (המקורית)</div><div class="listbox" data-k="orig" style="margin-bottom:10px">${st.clauses.map((cl, j) => `<span data-k="o${j}" style="background:${st.cur === j ? "var(--orange)" : "var(--cyan)"}">(${esc(cl.map(litS).join(" ∨ "))})</span>`).join("")}</div>`;
+    const outs = st.out.map((o, i) => {
+      const sat = st.val ? o.lits.some(l => litV(l, st.val)) : false;
+      const bg = i === st.newIdx ? "var(--orange)" : sat ? "var(--green)" : (st.cur === o.src ? "var(--pink)" : "var(--idle)");
+      const fg = bg === "var(--idle)" ? "var(--ink)" : "#fff";
+      return `<span data-k="n${i}" style="background:${bg};color:${fg}">(${o.lits.map(l => esc(l)).join(" ∨ ")})</span>`;
+    }).join("");
+    const vals = st.val ? `<div class="chips" data-k="vals" style="justify-content:center;margin-top:12px">${Object.entries(st.val).map(([k, v]) => `<span class="chip"><span>${esc(k)}</span><b>${v}</b></span>`).join("")}</div>` : "";
+    return top + `<div class="sublabel">φ' (3-CNF): ${st.out.length} פסוקיות</div><div class="listbox" data-k="out" style="gap:6px">${outs || "<em>(עוד ריק)</em>"}</div>` + vals;
+  },
+});
+
+/* ---------- 12: 3SAT -> Long path ---------- */
+algo({
+  id: "sat2longpath", topic: "12", name: "הרדוקציה מ-3SAT למסלול ארוך",
+  tag: "כל משתנה הוא \"שביל\" שאפשר לעבור בשני כיוונים, וכל פסוקית היא צומת שמחייב עקיפה.", kw: "3sat long path מסלול ארוך המילטוני רדוקציה np שלמה", src: "הרצאה 12, שקף 41",
+  intro: `<b>המטרה:</b> להראות שמסלול ארוך היא NP-שלמה, ברדוקציה מ-3SAT. בהינתן ${c("φ")} עם ${c("n")} משתנים ו-${c("m")} פסוקיות, בונים גרף מכוון ${c("G")} ומספר ${c("k")} כך ש-${c("φ")} ספיקה ⇔ יש ב-${c("G")} מסלול פשוט מ-${c("s")} ל-${c("t")} באורך ${c("k")}.<br><b>הרעיון:</b> כל משתנה הוא שביל של ${c("m")} קשתות, עם קשתות לשני הכיוונים. מעבר משמאל לימין פירושו ${c("x = 1")}, ומימין לשמאל ${c("x = 0")}. כל פסוקית ${c("Cj")} היא צומת שמחובר לקשת מספר ${c("j")} בשבילים של המשתנים שלה. ${c("k")} גדול מספיק כדי לחייב מסלול שעובר בכל הצמתים, כולל כל הפסוקיות. זה אפשרי רק אם ההשמה מספקת את כולן.`,
+  codeHe: true,
+  code: ["קלט: נוסחת 3-CNF `φ` עם משתנים `x1,…,xn` ופסוקיות `C1,…,Cm`.", "כל משתנה `xi` מיוצג ע״י מסלול באורך `m` (קשתות לשני הכיוונים).", "כיוון ← יתאים להשמה `xi = 0`, וכיוון → להשמה `xi = 1`.", "משרשרים את מסלולי המשתנים, ומוסיפים צומת `s` וצומת `t`.", "כל פסוקית `Cj` מיוצגת ע״י צומת בודד.", "אם `xi` מופיע ב-`Cj` בלי `¬` – מחברים את `Cj` לקשת מספר `j` בכיוון →.", "אם `xi` מופיע ב-`Cj` עם `¬` – מחברים את `Cj` לקשת מספר `j` בכיוון ←.", "מספר הצמתים: `n(m+1) + m + 2`.", "`k = (n+1)(m+1)` – מסלול שעובר בכל צמתי הגרף.", "`φ` ספיקה ⇔ יש ב-`G` מסלול פשוט מ-`s` ל-`t` באורך `k`."],
+  legend: [["cur", "נבנה עכשיו"], ["sel", "צומת פסוקית"], ["e:path", "המסלול"]],
+  inputs: [{ key: "f", label: "הנוסחה φ", def: "(x ∨ ¬y ∨ ¬z) ∧ (¬x ∨ y ∨ z) ∧ (¬y ∨ z) ∧ (¬x ∨ y ∨ ¬z)", size: 46, hint: `כמו בהרצאה. עד 4 פסוקיות ו-3 משתנים.` }],
+  parse(i) { return parseCNF(i.f, { maxLen: 3, maxClauses: 4, maxVars: 3 }); },
+  run(input) {
+    const { clauses, vars } = input, n = vars.length, m = clauses.length, S = [];
+    const W = 640, rowH = 92, H = 70 + n * rowH + 40, xL = 170, xR = 470;
+    const N = {}, E = [];
+    const vid = (i, j) => `v${i}_${j}`;
+    vars.forEach((v, i) => { for (let j = 0; j <= m; j++) N[vid(i, j)] = { x: xL + j * (xR - xL) / m, y: 70 + i * rowH, label: j === 0 || j === m ? v : "", r: j === 0 || j === m ? 18 : 11 }; });
+    N.s = { x: (xL + xR) / 2, y: 18, label: "s" }; N.t = { x: (xL + xR) / 2, y: H - 22, label: "t" };
+    clauses.forEach((cl, j) => { const left = j % 2 === 0; N["C" + j] = { x: left ? 45 : W - 45, y: 60 + Math.floor(j / 2) * Math.max(110, (n * rowH) / Math.ceil(m / 2)), label: "C" + (j + 1), r: 19 }; });
+    const shown = new Set(), st = { E: [] };
+    const snap = (line, msg, x = {}) => S.push({ line, msg, N, W, H, shown: [...shown], E: E.slice(), clauses, ...x, vars: [["n", n], ["m", m], ...(x.k ? [["k", x.k]] : [])] });
+    snap(0, `הנוסחה: ${c(clauses.map(cl => "(" + cl.map(litS).join(" ∨ ") + ")").join(" ∧ "))}. ${c(`n = ${n}`)}, ${c(`m = ${m}`)}.`);
+    vars.forEach((v, i) => {
+      const add = [];
+      for (let j = 0; j <= m; j++) shown.add(vid(i, j));
+      for (let j = 1; j <= m; j++) { add.push({ u: vid(i, j - 1), v: vid(i, j), key: `p${i}_${j}f`, t: "var" }, { u: vid(i, j), v: vid(i, j - 1), key: `p${i}_${j}b`, t: "var" }); }
+      E.push(...add);
+      snap([1, 2], `המשתנה ${c(v)} הופך לשביל עם ${m} קשתות, לשני הכיוונים. מעבר משמאל לימין = ${c(v + " = 1")}, מימין לשמאל = ${c(v + " = 0")}.`, { hlE: add.map(e => e.key), hlN: Array.from({ length: m + 1 }, (_, j) => vid(i, j)) });
+    });
+    { const add = [], ends = i => [vid(i, 0), vid(i, m)];
+      shown.add("s"); shown.add("t");
+      ends(0).forEach(e => add.push({ u: "s", v: e, key: "s" + e, t: "chain" }));
+      for (let i = 0; i + 1 < n; i++) for (const a of ends(i)) for (const b of ends(i + 1)) add.push({ u: a, v: b, key: a + b, t: "chain" });
+      ends(n - 1).forEach(e => add.push({ u: e, v: "t", key: e + "t", t: "chain" }));
+      E.push(...add);
+      snap(3, `משרשרים: מכל קצה של שביל אפשר להמשיך לכל אחד מהקצוות של השביל הבא. מוסיפים ${c("s")} בהתחלה ו-${c("t")} בסוף.`, { hlE: add.map(e => e.key), hlN: ["s", "t"] });
+    }
+    clauses.forEach((cl, j) => {
+      shown.add("C" + j); const add = [];
+      for (const l of cl) {
+        const i = vars.indexOf(l.v), a = vid(i, j), b = vid(i, j + 1);
+        if (!l.neg) add.push({ u: a, v: "C" + j, key: `c${j}${i}a`, t: "cl", bend: 22 }, { u: "C" + j, v: b, key: `c${j}${i}b`, t: "cl", bend: 22 });
+        else add.push({ u: b, v: "C" + j, key: `c${j}${i}a`, t: "cl", bend: -22 }, { u: "C" + j, v: a, key: `c${j}${i}b`, t: "cl", bend: -22 });
+      }
+      E.push(...add);
+      snap(cl.some(l => l.neg) ? [4, 5, 6] : [4, 5], `הפסוקית ${c("C" + (j + 1) + " = (" + cl.map(litS).join(" ∨ ") + ")")} הופכת לצומת. היא מחוברת לקשת מספר ${j + 1} בכל שביל של משתנה שלה: בכיוון → לליטרל חיובי, ובכיוון ← לליטרל עם ${c("¬")}. כך אפשר "לבקר" בה רק כשעוברים בכיוון שמספק אותה.`, { hlE: add.map(e => e.key), hlN: ["C" + j] });
+    });
+    const k = (n + 1) * (m + 1), nodes = n * (m + 1) + m + 2;
+    snap([7, 8], `יש ${c(`n(m+1) + m + 2 = ${nodes}`)} צמתים. דורשים מסלול באורך ${c(`k = (n+1)(m+1) = ${k}`)}, כלומר מסלול שעובר בכל ${nodes} הצמתים, כולל כל צומתי הפסוקיות.`, { k });
+    let a = input.__default ? { x: false, y: false, z: true } : null;
+    for (let mask = 0; mask < (1 << n) && !a; mask++) { const t = {}; vars.forEach((v, i) => t[v] = !!(mask & (1 << i))); if (clauses.every(cl => cl.some(l => t[l.v] !== l.neg))) a = t; }
+    if (!a) { snap(9, `<b>φ לא ספיקה</b> (בדקנו את כל ההשמות), ולכן אין מסלול שעובר בכל הצמתים.`, { k }); return S; }
+    const owner = clauses.map(cl => { const l = cl.find(l => a[l.v] !== l.neg); return vars.indexOf(l.v); });
+    const path = ["s"]; const pathE = [];
+    const go = (u, v, key) => { path.push(v); pathE.push(key); };
+    let prev = "s";
+    vars.forEach((v, i) => {
+      const right = a[v];
+      const start = right ? vid(i, 0) : vid(i, m);
+      go(prev, start, prev === "s" ? "s" + start : prev + start);
+      for (let step = 1; step <= m; step++) {
+        const j = right ? step - 1 : m - step;
+        const from = right ? vid(i, j) : vid(i, j + 1), to = right ? vid(i, j + 1) : vid(i, j);
+        const lit = clauses[j].find(l => l.v === v);
+        if (owner[j] === i && lit && (a[v] !== lit.neg)) { go(from, "C" + j, `c${j}${i}a`); go("C" + j, to, `c${j}${i}b`); }
+        else go(from, to, `p${i}_${j + 1}${right ? "f" : "b"}`);
+      }
+      prev = right ? vid(i, m) : vid(i, 0);
+      snap(9, `${c(`${v} = ${a[v] ? 1 : 0}`)}: עוברים את השביל של ${v} ${a[v] ? "משמאל לימין" : "מימין לשמאל"}${owner.some(o => o === i) ? `, ובדרך עוקפים דרך ${owner.map((o, j) => o === i ? "C" + (j + 1) : null).filter(Boolean).join(", ")}` : ""}.`, { k, pathE: pathE.slice(), pathN: path.slice() });
+    });
+    go(prev, "t", prev + "t");
+    snap(9, `<b>הגענו ל-t.</b> ההשמה ${c(vars.map(v => `${v}=${a[v] ? 1 : 0}`).join(", "))}${input.__default ? " (מההרצאה)" : ""} מספקת את כל הפסוקיות, ולכן עברנו בכל הצמתים: מסלול באורך ${pathE.length} = k.`, { k, pathE: pathE.slice(), pathN: path.slice() });
+    return S;
+  },
+  render(st) {
+    const hlN = new Set(st.hlN || []), pN = new Set(st.pathN || []), hlE = new Set(st.hlE || []), pE = new Set(st.pathE || []);
+    const nodes = st.shown.map(id => { const nd = st.N[id]; return { id, x: nd.x, y: nd.y, label: nd.label, r: nd.r, cls: pN.has(id) ? (id[0] === "C" ? "sel" : "cur") : hlN.has(id) ? "cur" : id[0] === "C" ? "vis" : "" }; });
+    const edges = st.E.map(e => ({ u: e.u, v: e.v, key: e.key, dir: true, bend: e.bend || (e.t === "var" ? 9 : 0), cls: pE.has(e.key) ? "path" : hlE.has(e.key) ? "cur" : (st.pathE ? "dim" : "") }));
+    const side = `<div class="listbox" data-k="cl" style="margin-top:8px">${st.clauses.map((cl, j) => `<span data-k="q${j}" style="background:${st.shown.includes("C" + j) ? "var(--pink)" : "var(--idle)"};color:${st.shown.includes("C" + j) ? "#fff" : "var(--muted)"}">C${j + 1} = (${esc(cl.map(litS).join(" ∨ "))})</span>`).join("")}</div>`;
+    return drawGraph({ w: st.W, h: st.H, nodes, edges }) + side;
+  },
+});
+
+initUI();
+</script>
+</body>
+</html>
