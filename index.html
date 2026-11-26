@@ -43,8 +43,6 @@ nav button.home{font-weight:600;margin-bottom:4px}
 .results .none{padding:12px;color:var(--muted);font-size:14px}
 .layout{flex:1;display:flex;min-height:0}
 nav{width:248px;flex-shrink:0;background:var(--soft);overflow-y:auto;padding:6px 0 28px}
-#navClose{display:none;align-items:center;justify-content:space-between;padding:6px 12px 6px 16px;font-weight:600}
-#navClose button{width:40px;height:40px;border:0;border-radius:6px;background:var(--idle);font-size:18px;cursor:pointer}
 #backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:25}
 nav .topic{padding:12px 16px 3px;font-size:12.5px;color:var(--muted);font-weight:600;display:flex;gap:7px;align-items:center}
 nav .topic i{font-style:normal;background:var(--cyan);color:#fff;border-radius:4px;font:700 11px "JetBrains Mono",monospace;padding:1px 5px}
@@ -206,7 +204,6 @@ svg text{font-family:"JetBrains Mono",monospace}
   #menuBtn{position:relative;z-index:40}
   body.navopen #menuBtn{background:var(--ink)}
   nav.open{display:block}
-  #navClose{display:flex}
   #backdrop.open{display:block}
   .two{grid-template-columns:1fr}
   .speed{display:none}
@@ -227,7 +224,7 @@ svg text{font-family:"JetBrains Mono",monospace}
 </header>
 <div class="layout">
   <div id="backdrop"></div>
-  <nav id="nav"><div id="navClose"><span>האלגוריתמים</span><button aria-label="סגירת התפריט">✕</button></div></nav>
+  <nav id="nav"></nav>
   <main id="main">
     <div id="welcome">
       <h2>כל האלגוריתמים של הקורס, בתנועה</h2>
@@ -644,7 +641,6 @@ function initUI() {
   const setNav = on => { $("nav").classList.toggle("open", on); $("backdrop").classList.toggle("open", on); document.body.classList.toggle("navopen", on); };
   $("menuBtn").onclick = () => setNav(!$("nav").classList.contains("open"));
   $("backdrop").onclick = () => setNav(false);
-  document.querySelector("#navClose button").onclick = () => setNav(false);
   document.addEventListener("keydown", ev => { if (ev.key === "Escape") setNav(false); });
   $("q").addEventListener("input", renderResults);
   $("q").addEventListener("keydown", e => { if (e.key === "Enter") { const a = $("results").querySelector("a"); if (a) a.click(); } if (e.key === "Escape") { $("q").value = ""; renderResults(); } });
