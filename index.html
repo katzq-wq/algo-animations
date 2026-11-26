@@ -25,6 +25,9 @@ button,input{font:inherit;color:inherit}
 header{flex-shrink:0;background:var(--orange);color:#fff;padding:10px 18px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
 header h1{margin:0;font-size:19px;font-weight:700;white-space:nowrap}
 header h1 span{font-weight:400;opacity:.9}
+header h1 a{color:inherit;text-decoration:none;display:block;cursor:pointer}
+header h1 a:hover{text-decoration:underline}
+nav button.home{font-weight:600;margin-bottom:4px}
 #menuBtn{display:none;background:rgba(255,255,255,.2);border:0;border-radius:6px;width:40px;height:40px;cursor:pointer;font-size:18px;color:#fff}
 .search{position:relative;flex:1 1 280px;max-width:520px;margin-inline-start:auto}
 .search input{width:100%;height:42px;border:0;border-radius:6px;padding:0 40px 0 14px;font-size:15.5px;color:var(--ink);background:#fff}
@@ -215,7 +218,7 @@ svg text{font-family:"JetBrains Mono",monospace}
 <body>
 <header>
   <button id="menuBtn" aria-label="תפריט">☰</button>
-  <h1>הנפשות <span>· יסודות האלגוריתמים והסיבוכיות</span></h1>
+  <h1><a href="#" id="homeLink" title="למסך הבית">הנפשות <span>· יסודות האלגוריתמים והסיבוכיות</span></a></h1>
   <div class="search">
     <span class="ic">⌕</span>
     <input id="q" type="search" placeholder="חפשו בחומר: למשל ״מסלול קצר״, ״ערימה״, ״רדוקציה״" autocomplete="off" aria-label="חיפוש בחומר הקורס">
@@ -474,6 +477,7 @@ const TILE = ["var(--orange)", "var(--green)", "var(--cyan)", "var(--pink)"];
 
 function buildNav() {
   const nav = $("nav"), tiles = $("tiles");
+  const hb = document.createElement("button"); hb.className = "home"; hb.textContent = "⌂ מסך הבית"; hb.onclick = goHome; nav.appendChild(hb);
   TOPICS.forEach((t, ti) => {
     const list = ALGOS.filter(a => a.topic === t.num); if (!list.length) return;
     const h = document.createElement("div"); h.className = "topic"; h.innerHTML = `<i>${t.num}</i>${esc(t.name)}`; nav.appendChild(h);
@@ -484,6 +488,14 @@ function buildNav() {
     const tb = document.createElement("button"); tb.style.background = TILE[ti % 4];
     tb.innerHTML = `${esc(t.name)}<small>${list.length === 1 ? "הנפשה אחת" : list.length + " הנפשות"}</small>`; tb.onclick = () => go2(list[0].id); tiles.appendChild(tb);
   });
+}
+function goHome() {
+  stop(); cur = null;
+  $("algo").hidden = true; $("welcome").hidden = false;
+  document.querySelectorAll("nav button").forEach(b => b.classList.remove("on"));
+  $("nav").classList.remove("open"); $("backdrop").classList.remove("open"); document.body.classList.remove("navopen");
+  try { history.replaceState(null, "", location.pathname + location.search); } catch (e) {}
+  $("main").scrollTop = 0;
 }
 function go2(id) { openAlgo(id); $("nav").classList.remove("open"); $("backdrop").classList.remove("open"); document.body.classList.remove("navopen"); try { history.replaceState(null, "", "#" + id); } catch (e) {} }
 function toggle(btn, box, on) { const v = on !== undefined ? on : box.hidden; box.hidden = !v; btn.setAttribute("aria-expanded", String(v)); }
@@ -643,7 +655,8 @@ function initUI() {
     else if (e.key === "ArrowRight") { stop(); step(-1); e.preventDefault(); }
     else if (e.key === " ") { play(); e.preventDefault(); }
   });
-  const fromHash = () => { const h = location.hash.slice(1); if (h && ALGOS.find(a => a.id === h) && (!cur || cur.id !== h)) openAlgo(h); };
+  $("homeLink").onclick = ev => { ev.preventDefault(); goHome(); };
+  const fromHash = () => { const h = location.hash.slice(1); if (!h) { if (cur) goHome(); return; } if (ALGOS.find(a => a.id === h) && (!cur || cur.id !== h)) openAlgo(h); };
   fromHash(); window.addEventListener("hashchange", fromHash);
 }
 const SLIDES = [[1, 3, 3, "מה זה אלגוריתם ?"], [1, 4, 4, "ההגדרה היבשה"], [1, 5, 5, "דוגמא – האלגוריתם של אוקלידס"], [1, 6, 6, "דוגמאות נוספות"], [1, 7, 10, "אלגוריתם = תיאור סופי של פעולות בסיסיות"], [1, 11, 11, "מהו אלגוריתם טוב ?"], [1, 12, 12, "אלגוריתם טוב = זמן ריצה מינימלי"], [1, 13, 14, "ביצוע פעולה בסיסית"], [1, 15, 16, "זמן ריצה = מספר פעולות בסיסיות ( )"], [1, 17, 18, "ניתוח המקרה הגרוע"], [1, 19, 20, "הזנחת קבועים"], [1, 21, 21, "מתמטיקה אסימפטומטית"], [1, 22, 27, "O גדול"], [1, 28, 31, "o קטן"], [1, 32, 32, "סימנים נוספים"], [1, 33, 33, "סימונים נוספים"], [1, 34, 34, "סיכום"], [2, 2, 4, "בעיית המיון"], [2, 5, 7, "פעולות בסיסיות"], [2, 8, 8, "תזכורת - O גדול"], [2, 9, 11, "אלגוריתמים איטרטיביים"], [2, 12, 16, "חימום – מציאת מינימום במערך"], [2, 17, 20, "אלגוריתם נאיבי"], [2, 21, 24, "מיון מניה"], [2, 25, 25, "מיון מניה – ניתוח לוקאלי"], [2, 26, 26, "מיון מניה – ניתוח גלובאלי"], [2, 27, 27, "מיון מניה – ניתוח לוקאלי מול גלובלי"], [2, 28, 28, "סיכום"], [3, 2, 2, "בעיית המיון"], [3, 3, 6, "אלגוריתמים רקורסיביים"], [3, 7, 8, "ניתוח אלגוריתמים רקורסיבים"], [3, 9, 32, "אלגוריתם מיון מיזוג"], [3, 33, 36, "עצים בינארים שלמים"], [3, 37, 39, "ניתוח לוקאלי למיון מיזוג"], [3, 40, 40, "ניתוח גלובלי למיון מיזוג"], [3, 41, 42, "ניתוח גלובאלי למיון מיזוג"], [3, 43, 45, "ניתוח בצורה ישירה למיון מיזוג"], [3, 46, 48, "מיזוג ב- O(n) זמן"], [3, 49, 49, "סיכום"], [4, 2, 3, "מבני נתונים לחיפוש"], [4, 4, 5, "שני מבני נתונים בסיסים"], [4, 6, 9, "חיפוש בינארי"], [4, 10, 10, "השוואה בין מערך לרשימה מקושרת"], [4, 11, 16, "עצי חיפוש בינאריים"], [4, 17, 19, "סריקה של עצי חיפוש בינאריים"], [4, 20, 22, "חיפוש בעצי חיפוש בינאריים"], [4, 23, 23, "הכנסה בעצי חיפוש בינאריים"], [4, 24, 26, "הוצאה בעצי חיפוש בינאריים"], [4, 27, 30, "דוגמא לסדרה של פעולות"], [4, 31, 33, "עצי חיפוש בינאריים מאוזנים"], [4, 34, 34, "סיכום"], [5, 2, 3, "בעיית תור העדיפויות"], [5, 4, 8, "ערימה בינארית"], [5, 9, 9, "מציאת מינימום"], [5, 10, 10, "הכנסת איבר חדש"], [5, 11, 11, "הוצאת האיבר המינימלי"], [5, 12, 14, "דוגמא לסדרה של פעולות"], [5, 15, 23, "בניית ערימה בינארית"], [5, 24, 30, "מימוש ערימה בינארית כמערך"], [5, 31, 32, "מיון נאיבי  מיון ערימה"], [5, 33, 33, "סיכום"], [6, 2, 8, "גרפים ורשתות"], [6, 9, 10, "ייצוג של גרפים"], [6, 11, 12, "דרגות ושכנים"], [6, 13, 13, "קליקות וקבוצות בלתי תלויות"], [6, 14, 14, "מסלולים ומעגלים"], [6, 15, 16, "רכיבי קשירות ועצים"], [6, 17, 23, "חיפוש לרוחב (BFS)"], [6, 24, 29, "חיפוש לעומק (DFS)"], [6, 30, 33, "מציאת רכיבי קשירות"], [6, 34, 34, "סיכום"], [7, 2, 3, "בעיית תכנון הרשתות"], [7, 4, 9, "קשירות מינימלית"], [7, 10, 11, "בעיית העץ הפורש המינימלי"], [7, 12, 22, "האלגוריתם של פרים (Prim)"], [7, 23, 25, "סיבוכיות זמן"], [7, 26, 44, "האצה בעזרת ערימה בינארית"], [7, 45, 49, "נכונות האלגוריתם"], [7, 50, 50, "סיכום"], [8, 2, 3, "גרפים מכוונים"], [8, 4, 6, "בעיית הנתיב הקצר ביותר"], [8, 7, 9, "האלגוריתם של דייקסטרה (Dijkstra)"], [8, 10, 23, "דוגמא לריצת האלגוריתם"], [8, 24, 31, "נכונות האלגוריתם"], [8, 32, 33, "סיבוכיות זמן האלגוריתם"], [8, 34, 47, "האצה בעזרת ערימה בינארית"], [8, 48, 48, "סיכום"], [9, 2, 4, "שידוך בגרפים"], [9, 5, 5, "שידוך מקסימלי בהכלה"], [9, 6, 7, "שידוך מקסימלי"], [9, 8, 12, "מסלולי שיפור"], [9, 13, 17, "הלמה של Berge"], [9, 18, 20, "אלגוריתם לשידוך מקסימלי"], [9, 21, 22, "גרפים דו-צדדיים"], [9, 23, 27, "שידוך דו-צדדי"], [9, 28, 31, "מציאת מסלולי שיפור בגרף דו-צדדי"], [9, 32, 37, "אלגוריתם לשידוך דו-צדדי"], [9, 38, 38, "סיכום"], [10, 2, 5, "זרימה ברשת זרימה"], [10, 6, 9, "בעיית הזרימה המקסימלית"], [10, 10, 11, "חתך ברשת זרימה"], [10, 12, 12, "בעיית החתך המינימלי"], [10, 13, 13, "זרימה ≤ חתך"], [10, 14, 15, "רשת שיורית"], [10, 16, 20, "מסלולי שיפור ברשת שיורית"], [10, 21, 25, "המשפט של פורד-פולקרסון"], [10, 26, 26, "זרימה מקסימלית = חתך מינימלי"], [10, 27, 28, "האלגוריתם של פורד-פולקרסון"], [10, 29, 29, "בעיית הזרימה המקסימלית"], [10, 30, 38, "האלגוריתם של פורד-פולקרסון"], [10, 39, 41, "דוגמאות לשימושים של זרימה"], [10, 42, 42, "סיכום"], [11, 2, 2, "מוטיבציה"], [11, 3, 8, "בעיות הכרעה"], [11, 9, 11, "המחלקה P"], [11, 12, 18, "בעיית הספיקות (SAT)"], [11, 19, 24, "רדוקציה (צמצום)"], [11, 25, 29, "המחלקה NP"], [11, 30, 33, "רדוקציה ממסלול ארוך ל- SAT"], [11, 34, 34, "רדוקציה מסלול ארוך ל- SAT"], [11, 35, 36, "רדוקציה ממסלול ארוך ל- SAT"], [11, 37, 38, "רדוקציה מסלול ארוך ל- SAT"], [11, 39, 39, "רדוקציה ממסלול ארוך ל- SAT"], [11, 40, 48, "רדוקציה מכיסוי צמתים ל- SAT"], [11, 49, 49, "שאלת מיליון הדולר"], [12, 2, 2, "שאלת מיליון הדולר"], [12, 3, 3, "רדוקציה (צמצום)"], [12, 4, 11, "הרכבת רדוקציות"], [12, 12, 14, "NP-שלמות"], [12, 15, 23, "3-SAT היא NP-שלמה"], [12, 24, 35, "כיסוי צמתים היא NP-שלמה"], [12, 36, 46, "מסלול ארוך היא NP-שלמה"], [12, 47, 48, "סיכום"]];
