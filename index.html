@@ -474,7 +474,7 @@ function buildNav() {
       b.onclick = () => go2(a.id); nav.appendChild(b);
     }
     const tb = document.createElement("button"); tb.style.background = TILE[ti % 4];
-    tb.innerHTML = `${esc(t.name)}<small>${list.length} הנפשות</small>`; tb.onclick = () => go2(list[0].id); tiles.appendChild(tb);
+    tb.innerHTML = `${esc(t.name)}<small>${list.length === 1 ? "הנפשה אחת" : list.length + " הנפשות"}</small>`; tb.onclick = () => go2(list[0].id); tiles.appendChild(tb);
   });
 }
 function go2(id) { openAlgo(id); $("nav").classList.remove("open"); try { history.replaceState(null, "", "#" + id); } catch (e) {} }
