@@ -286,6 +286,25 @@ body.home #main{background:#fff}
 @keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
 @media (max-width:860px){.hero{grid-template-columns:1fr;min-height:0}.hero-fig{order:-1}.hero p{max-width:none}body.home #menuBtn{display:none}}
 @media (max-width:760px){body.home #menuBtn{display:none}}
+.ged{width:100%;border:1px solid var(--line);border-radius:8px;background:#fff;padding:10px 12px;margin-bottom:6px}
+.ged-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.ged-t{font-weight:700;color:var(--ink)}
+.ged-hint{font-size:15px;color:var(--muted);margin:6px 2px;min-height:24px}
+.ged-wrap{position:relative;background:var(--soft);border-radius:8px}
+.ged-svg{display:block;width:100%;height:auto;max-height:380px;direction:ltr;touch-action:none;user-select:none}
+.ged[data-mode=add] .ged-svg{cursor:crosshair}
+.ged[data-mode=del] .ged-svg{cursor:not-allowed}
+.ged .ge .hit{stroke:transparent;stroke-width:16;fill:none}
+.ged .ge .ln{stroke:#b6a2ab;stroke-width:2.4;fill:none}
+.ged[data-mode=del] .ge:hover .ln,.ged[data-mode=flip] .ge:hover .ln{stroke:var(--wine);stroke-width:4}
+.ged[data-mode=del] .ge,.ged[data-mode=flip] .ge{cursor:pointer}
+.ged .wl{cursor:pointer}.ged .wl rect{fill:#fff;stroke:var(--wine);stroke-width:1.5}.ged .wl text{font:700 13px "IBM Plex Mono",monospace;fill:var(--wine);text-anchor:middle;dominant-baseline:central}
+.ged .wl:hover rect{fill:var(--orange-t)}
+.ged .gn{cursor:grab}.ged .gn circle{fill:#fff;stroke:var(--wine);stroke-width:2}.ged .gn text{font:700 15px "IBM Plex Mono",monospace;fill:var(--ink);text-anchor:middle;dominant-baseline:central;pointer-events:none}
+.ged .gn.sel circle{fill:var(--wine)}.ged .gn.sel text{fill:#fff}
+.ged[data-mode=del] .gn:hover circle{fill:var(--pink-t);stroke-dasharray:4 3}
+.ged-msg{font-size:15px;fill:var(--muted);text-anchor:middle;font-family:"Noto Sans Hebrew",sans-serif}
+.ged-in{position:absolute;width:64px;height:34px;text-align:center;font:700 15px "IBM Plex Mono",monospace;border:2px solid var(--wine);border-radius:6px;direction:ltr;background:#fff}
 </style>
 </head>
 <body>
@@ -651,11 +670,12 @@ function openAlgo(id) {
   }
   const g = document.createElement("button"); g.className = "btn"; g.textContent = "הרצה"; g.onclick = run;
   const reset = document.createElement("button"); reset.className = "btn ghost"; reset.textContent = "חזרה לדוגמה";
-  reset.onclick = () => { a.inputs.forEach(f => $("in_" + f.key).value = f.def); run(); };
+  reset.onclick = () => { a.inputs.forEach(f => $("in_" + f.key).value = f.def); delete GPOS[a.id]; run(); if (ged) ged.resync(); };
   const err = document.createElement("div"); err.className = "err"; err.id = "err";
   inp.append(g, reset, err);
   $("main").scrollTop = 0;
   run();
+  var ged = mountEditor(a);
 }
 function codeOf() { return typeof cur.code === "function" ? cur.code(OPT) : cur.code; }
 function renderCode() {
@@ -681,7 +701,7 @@ function run() {
   stop();
   const err = $("err"); err.innerHTML = "";
   let input;
-  try { input = cur.parse(readInputs(), OPT); input.__default = isDefault(); input.__opt = { ...OPT }; steps = cur.run(input); if (!steps.length) throw "לא נוצרו צעדים."; }
+  try { input = cur.parse(readInputs(), OPT); input.__default = isDefault(); input.__pos = GPOS[cur.id]; input.__opt = { ...OPT }; steps = cur.run(input); if (!steps.length) throw "לא נוצרו צעדים."; }
   catch (e) { err.innerHTML = typeof e === "string" ? e : "שגיאה: " + esc(e.message || e); toggle($("tInput"), $("inputsBox"), true); if (typeof e !== "string") console.error(e); return; }
   const b = $("badge");
   if (!input.__default) { b.className = "badge own"; b.textContent = "הקלט שלכם"; }
@@ -786,6 +806,130 @@ function initUI() {
   $("homeLink").onclick = ev => { ev.preventDefault(); goHome(); };
   const fromHash = () => { const h = location.hash.slice(1); if (!h) { if (cur) goHome(); return; } if (ALGOS.find(a => a.id === h) && (!cur || cur.id !== h)) openAlgo(h); };
   fromHash(); if (!cur) goHome(); window.addEventListener("hashchange", fromHash);
+}
+
+/* ---------- graph editor: change the input by drawing on the graph ---------- */
+const GPOS = {};   // per algorithm: node positions the user dragged to
+function mountEditor(a) {
+  const f = a.inputs.find(x => x.graph); if (!f) return;
+  const ta = $("in_" + f.key), opt = f.graph, W = 620, H = 340, RR = 20;
+  const box = document.createElement("div"); box.className = "ged";
+  box.innerHTML = `<div class="ged-bar"><span class="ged-t">עריכה על הגרף:</span><div class="seg" role="group" aria-label="מצב עריכה">
+      <button type="button" data-m="add" class="on">הוספה והזזה</button>
+      <button type="button" data-m="del">מחיקה</button>${opt.directed ? `<button type="button" data-m="flip">הפיכת חץ</button>` : ""}
+    </div></div>
+    <div class="ged-hint" aria-live="polite"></div>
+    <div class="ged-wrap"><svg viewBox="0 0 ${W} ${H}" class="ged-svg"></svg></div>`;
+  ta.closest("label").before(box);
+  const svg = box.querySelector("svg"), hint = box.querySelector(".ged-hint"), wrap = box.querySelector(".ged-wrap");
+  let mode = "add", sel = null, G = null, P = {}, drag = null, editing = null;
+  const HINT = {
+    add: `לחיצה על מקום ריק מוסיפה צומת. לחיצה על צומת ואז על צומת אחר מוסיפה ${opt.directed ? "חץ ביניהם (מהראשון לשני)" : "קשת ביניהם"}. גוררים צומת כדי להזיז אותו.${opt.weighted ? " לחיצה על מספר של משקל משנה אותו." : ""}`,
+    del: "לחיצה על צומת או על קשת מוחקת אותם.",
+    flip: "לחיצה על חץ הופכת את הכיוון שלו.",
+  };
+  const setMode = m => { mode = m; sel = null; box.querySelectorAll(".ged-bar button").forEach(b => b.classList.toggle("on", b.dataset.m === m)); box.dataset.mode = m; hint.textContent = HINT[m]; draw(); };
+  box.querySelectorAll(".ged-bar button").forEach(b => b.onclick = () => setMode(b.dataset.m));
+
+  const load = () => {
+    try { G = parseGraph(ta.value, opt); } catch (e) { G = null; return false; }
+    const st = steps && steps[0] && steps[0].pos;
+    const old = { ...P }; P = {};
+    G.nodes.forEach((n, i) => { P[n] = GPOS[a.id]?.[n] || old[n] || (st && st[n]) || null; });
+    const miss = G.nodes.filter(n => !P[n]);
+    if (miss.length) { const L = layeredLayout(G.nodes, G.edges, G.nodes[0]); miss.forEach(n => P[n] = L[n]); }
+    return true;
+  };
+  const save = () => {
+    ta.value = G.edges.map(e => `${e.u}${opt.directed ? "->" : "-"}${e.v}${opt.weighted ? " " + e.w : ""}`).join("\n");
+    GPOS[a.id] = {}; for (const n of G.nodes) GPOS[a.id][n] = { x: P[n].x, y: P[n].y };
+    ["s", "t"].forEach(k => { const el = $("in_" + k); if (el && !G.nodes.includes(el.value.trim()) && G.nodes.length) el.value = k === "s" ? G.nodes[0] : G.nodes[G.nodes.length - 1]; });
+    run(); draw();
+  };
+  const pt = ev => { const m = svg.getScreenCTM().inverse(), p = new DOMPoint(ev.clientX, ev.clientY).matrixTransform(m); return { x: Math.max(RR + 4, Math.min(W - RR - 4, p.x)), y: Math.max(RR + 4, Math.min(H - RR - 4, p.y)) }; };
+  const geom = e => {
+    const a1 = P[e.u], b = P[e.v], anti = opt.directed && G.edges.some(f => f.u === e.v && f.v === e.u);
+    const dx = b.x - a1.x, dy = b.y - a1.y, L = Math.hypot(dx, dy) || 1, ux = dx / L, uy = dy / L, bend = anti ? 22 : 0;
+    const mx = (a1.x + b.x) / 2 - uy * bend, my = (a1.y + b.y) / 2 + ux * bend;
+    const gap = opt.directed ? 5 : 0;
+    const d = bend ? `M${a1.x + ux * RR},${a1.y + uy * RR} Q${mx},${my} ${b.x - ux * (RR + gap)},${b.y - uy * (RR + gap)}` : `M${a1.x + ux * RR},${a1.y + uy * RR} L${b.x - ux * (RR + gap)},${b.y - uy * (RR + gap)}`;
+    return { d, lx: bend ? (a1.x + 2 * mx + b.x) / 4 : mx, ly: bend ? (a1.y + 2 * my + b.y) / 4 : my };
+  };
+  function draw() {
+    if (!G) { svg.innerHTML = `<text x="${W / 2}" y="${H / 2}" class="ged-msg">יש שגיאה בכתיבה למטה. תקנו אותה, והגרף יופיע כאן.</text>`; return; }
+    let s = `<defs><marker id="gedA" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#7a5a68"/></marker></defs>`;
+    G.edges.forEach((e, i) => {
+      const g = geom(e);
+      s += `<g class="ge" data-e="${i}"><path class="hit" d="${g.d}"/><path class="ln" d="${g.d}" ${opt.directed ? `marker-end="url(#gedA)"` : ""}/>`;
+      if (opt.weighted) { const t = String(e.w), tw = t.length * 8 + 16; s += `<g class="wl" data-w="${i}" transform="translate(${g.lx},${g.ly})"><rect x="${-tw / 2}" y="-12" width="${tw}" height="24" rx="12"/><text y="1">${esc(t)}</text></g>`; }
+      s += `</g>`;
+    });
+    G.nodes.forEach(n => { s += `<g class="gn${sel === n ? " sel" : ""}" data-n="${esc(n)}" transform="translate(${P[n].x},${P[n].y})"><circle r="${RR}"/><text y="1">${esc(n)}</text></g>`; });
+    svg.innerHTML = s;
+  }
+  const addNode = p => {
+    if (G.nodes.length >= 10) { hint.textContent = "אפשר עד 10 צמתים, כדי שההנפשה תהיה ברורה."; return; }
+    let k = 1; while (G.nodes.includes(String(k))) k++;
+    const id = String(k); G.nodes.push(id); G.nodes = sortIds(G.nodes); P[id] = p;
+    hint.textContent = `נוסף צומת ${id}. עכשיו מחברים אותו: לוחצים עליו ואז על צומת אחר.`;
+    sel = id; draw(); // a node without edges is not saved until it gets an edge
+  };
+  const addEdge = (u, v) => {
+    if (G.edges.some(e => (e.u === u && e.v === v) || (!opt.directed && e.u === v && e.v === u))) { hint.textContent = `כבר יש ${opt.directed ? "חץ" : "קשת"} בין ${u} ל-${v}.`; return; }
+    G.edges.push({ u, v, w: opt.weighted ? 1 : null }); save();
+    if (opt.weighted) editW(G.edges.length - 1); else hint.textContent = HINT.add;
+  };
+  const delEdge = i => { G.edges.splice(i, 1); G.nodes = G.nodes.filter(n => G.edges.some(e => e.u === n || e.v === n)); if (!G.edges.length) { hint.textContent = "צריך להשאיר לפחות קשת אחת."; load(); draw(); return; } save(); };
+  const delNode = n => { const left = G.edges.filter(e => e.u !== n && e.v !== n); if (!left.length) { hint.textContent = "צריך להשאיר לפחות קשת אחת."; return; } G.edges = left; G.nodes = G.nodes.filter(x => x !== n && G.edges.some(e => e.u === x || e.v === x)); delete P[n]; save(); };
+  function editW(i) {
+    const e = G.edges[i], g = geom(e), r = svg.getBoundingClientRect(), k = r.width / W;
+    editing?.remove();
+    const inp = document.createElement("input"); inp.type = "number"; inp.min = "0"; inp.step = "1"; inp.className = "ged-in"; inp.value = e.w;
+    inp.setAttribute("aria-label", `המשקל של ${e.u}${opt.directed ? "→" : "–"}${e.v}`);
+    inp.style.left = (g.lx * k - 32) + "px"; inp.style.top = (g.ly * k - 17 + 2) + "px";
+    wrap.appendChild(inp); editing = inp; inp.focus(); inp.select();
+    hint.textContent = "כותבים משקל חדש ולוחצים Enter.";
+    let done = false;
+    const commit = ok => { if (done) return; done = true; const v = inp.value.trim(); inp.remove(); editing = null;
+      if (ok && /^\d+(\.\d+)?$/.test(v)) { e.w = Number(v); save(); } else draw(); hint.textContent = HINT[mode]; };
+    inp.addEventListener("keydown", ev => { ev.stopPropagation(); if (ev.key === "Enter") commit(true); if (ev.key === "Escape") commit(false); });
+    inp.addEventListener("blur", () => commit(true));
+  }
+  svg.addEventListener("pointerdown", ev => {
+    if (!G) return;
+    const n = ev.target.closest(".gn"), w = ev.target.closest(".wl"), ed = ev.target.closest(".ge");
+    if (n) {
+      const id = n.dataset.n;
+      if (mode === "del") return delNode(id);
+      if (mode !== "add") return;
+      drag = { id, start: pt(ev), moved: false }; svg.setPointerCapture(ev.pointerId); return;
+    }
+    if (w && mode === "add") { ev.preventDefault(); return editW(+w.dataset.w); }
+    if (ed) {
+      const i = +ed.dataset.e;
+      if (mode === "del") return delEdge(i);
+      if (mode === "flip") { const e = G.edges[i]; if (G.edges.some(f => f.u === e.v && f.v === e.u)) { hint.textContent = "כבר יש חץ בכיוון ההפוך."; return; } [e.u, e.v] = [e.v, e.u]; return save(); }
+      return;
+    }
+    if (mode === "add") { if (sel) { sel = null; draw(); hint.textContent = HINT.add; } else addNode(pt(ev)); }
+  });
+  svg.addEventListener("pointermove", ev => {
+    if (!drag) return;
+    const p = pt(ev); if (!drag.moved && Math.hypot(p.x - drag.start.x, p.y - drag.start.y) < 5) return;
+    drag.moved = true; P[drag.id] = p; draw();
+  });
+  svg.addEventListener("pointerup", () => {
+    if (!drag) return;
+    const d = drag; drag = null;
+    if (d.moved) { if (G.edges.some(e => e.u === d.id || e.v === d.id)) save(); return; }
+    if (!sel) { sel = d.id; hint.textContent = `בחרתם את ${d.id}. עכשיו לוחצים על הצומת ${opt.directed ? "שהחץ יגיע אליו" : "שרוצים לחבר אליו"}.`; draw(); }
+    else if (sel === d.id) { sel = null; hint.textContent = HINT.add; draw(); }
+    else { const u = sel; sel = null; addEdge(u, d.id); draw(); }
+  });
+  ta.addEventListener("input", () => { if (load()) draw(); else draw(); });
+  box.resync = () => { if (load()) draw(); else draw(); };
+  load(); setMode("add");
+  return box;
 }
 const SLIDES = [[1, 3, 3, "מה זה אלגוריתם ?"], [1, 4, 4, "ההגדרה היבשה"], [1, 5, 5, "דוגמא – האלגוריתם של אוקלידס"], [1, 6, 6, "דוגמאות נוספות"], [1, 7, 10, "אלגוריתם = תיאור סופי של פעולות בסיסיות"], [1, 11, 11, "מהו אלגוריתם טוב ?"], [1, 12, 12, "אלגוריתם טוב = זמן ריצה מינימלי"], [1, 13, 14, "ביצוע פעולה בסיסית"], [1, 15, 16, "זמן ריצה = מספר פעולות בסיסיות ( )"], [1, 17, 18, "ניתוח המקרה הגרוע"], [1, 19, 20, "הזנחת קבועים"], [1, 21, 21, "מתמטיקה אסימפטומטית"], [1, 22, 27, "O גדול"], [1, 28, 31, "o קטן"], [1, 32, 32, "סימנים נוספים"], [1, 33, 33, "סימונים נוספים"], [1, 34, 34, "סיכום"], [2, 2, 4, "בעיית המיון"], [2, 5, 7, "פעולות בסיסיות"], [2, 8, 8, "תזכורת - O גדול"], [2, 9, 11, "אלגוריתמים איטרטיביים"], [2, 12, 16, "חימום – מציאת מינימום במערך"], [2, 17, 20, "אלגוריתם נאיבי"], [2, 21, 24, "מיון מניה"], [2, 25, 25, "מיון מניה – ניתוח לוקאלי"], [2, 26, 26, "מיון מניה – ניתוח גלובאלי"], [2, 27, 27, "מיון מניה – ניתוח לוקאלי מול גלובלי"], [2, 28, 28, "סיכום"], [3, 2, 2, "בעיית המיון"], [3, 3, 6, "אלגוריתמים רקורסיביים"], [3, 7, 8, "ניתוח אלגוריתמים רקורסיבים"], [3, 9, 32, "אלגוריתם מיון מיזוג"], [3, 33, 36, "עצים בינארים שלמים"], [3, 37, 39, "ניתוח לוקאלי למיון מיזוג"], [3, 40, 40, "ניתוח גלובלי למיון מיזוג"], [3, 41, 42, "ניתוח גלובאלי למיון מיזוג"], [3, 43, 45, "ניתוח בצורה ישירה למיון מיזוג"], [3, 46, 48, "מיזוג ב- O(n) זמן"], [3, 49, 49, "סיכום"], [4, 2, 3, "מבני נתונים לחיפוש"], [4, 4, 5, "שני מבני נתונים בסיסים"], [4, 6, 9, "חיפוש בינארי"], [4, 10, 10, "השוואה בין מערך לרשימה מקושרת"], [4, 11, 16, "עצי חיפוש בינאריים"], [4, 17, 19, "סריקה של עצי חיפוש בינאריים"], [4, 20, 22, "חיפוש בעצי חיפוש בינאריים"], [4, 23, 23, "הכנסה בעצי חיפוש בינאריים"], [4, 24, 26, "הוצאה בעצי חיפוש בינאריים"], [4, 27, 30, "דוגמא לסדרה של פעולות"], [4, 31, 33, "עצי חיפוש בינאריים מאוזנים"], [4, 34, 34, "סיכום"], [5, 2, 3, "בעיית תור העדיפויות"], [5, 4, 8, "ערימה בינארית"], [5, 9, 9, "מציאת מינימום"], [5, 10, 10, "הכנסת איבר חדש"], [5, 11, 11, "הוצאת האיבר המינימלי"], [5, 12, 14, "דוגמא לסדרה של פעולות"], [5, 15, 23, "בניית ערימה בינארית"], [5, 24, 30, "מימוש ערימה בינארית כמערך"], [5, 31, 32, "מיון נאיבי  מיון ערימה"], [5, 33, 33, "סיכום"], [6, 2, 8, "גרפים ורשתות"], [6, 9, 10, "ייצוג של גרפים"], [6, 11, 12, "דרגות ושכנים"], [6, 13, 13, "קליקות וקבוצות בלתי תלויות"], [6, 14, 14, "מסלולים ומעגלים"], [6, 15, 16, "רכיבי קשירות ועצים"], [6, 17, 23, "חיפוש לרוחב (BFS)"], [6, 24, 29, "חיפוש לעומק (DFS)"], [6, 30, 33, "מציאת רכיבי קשירות"], [6, 34, 34, "סיכום"], [7, 2, 3, "בעיית תכנון הרשתות"], [7, 4, 9, "קשירות מינימלית"], [7, 10, 11, "בעיית העץ הפורש המינימלי"], [7, 12, 22, "האלגוריתם של פרים (Prim)"], [7, 23, 25, "סיבוכיות זמן"], [7, 26, 44, "האצה בעזרת ערימה בינארית"], [7, 45, 49, "נכונות האלגוריתם"], [7, 50, 50, "סיכום"], [8, 2, 3, "גרפים מכוונים"], [8, 4, 6, "בעיית הנתיב הקצר ביותר"], [8, 7, 9, "האלגוריתם של דייקסטרה (Dijkstra)"], [8, 10, 23, "דוגמא לריצת האלגוריתם"], [8, 24, 31, "נכונות האלגוריתם"], [8, 32, 33, "סיבוכיות זמן האלגוריתם"], [8, 34, 47, "האצה בעזרת ערימה בינארית"], [8, 48, 48, "סיכום"], [9, 2, 4, "שידוך בגרפים"], [9, 5, 5, "שידוך מקסימלי בהכלה"], [9, 6, 7, "שידוך מקסימלי"], [9, 8, 12, "מסלולי שיפור"], [9, 13, 17, "הלמה של Berge"], [9, 18, 20, "אלגוריתם לשידוך מקסימלי"], [9, 21, 22, "גרפים דו-צדדיים"], [9, 23, 27, "שידוך דו-צדדי"], [9, 28, 31, "מציאת מסלולי שיפור בגרף דו-צדדי"], [9, 32, 37, "אלגוריתם לשידוך דו-צדדי"], [9, 38, 38, "סיכום"], [10, 2, 5, "זרימה ברשת זרימה"], [10, 6, 9, "בעיית הזרימה המקסימלית"], [10, 10, 11, "חתך ברשת זרימה"], [10, 12, 12, "בעיית החתך המינימלי"], [10, 13, 13, "זרימה ≤ חתך"], [10, 14, 15, "רשת שיורית"], [10, 16, 20, "מסלולי שיפור ברשת שיורית"], [10, 21, 25, "המשפט של פורד-פולקרסון"], [10, 26, 26, "זרימה מקסימלית = חתך מינימלי"], [10, 27, 28, "האלגוריתם של פורד-פולקרסון"], [10, 29, 29, "בעיית הזרימה המקסימלית"], [10, 30, 38, "האלגוריתם של פורד-פולקרסון"], [10, 39, 41, "דוגמאות לשימושים של זרימה"], [10, 42, 42, "סיכום"], [11, 2, 2, "מוטיבציה"], [11, 3, 8, "בעיות הכרעה"], [11, 9, 11, "המחלקה P"], [11, 12, 18, "בעיית הספיקות (SAT)"], [11, 19, 24, "רדוקציה (צמצום)"], [11, 25, 29, "המחלקה NP"], [11, 30, 33, "רדוקציה ממסלול ארוך ל- SAT"], [11, 34, 34, "רדוקציה מסלול ארוך ל- SAT"], [11, 35, 36, "רדוקציה ממסלול ארוך ל- SAT"], [11, 37, 38, "רדוקציה מסלול ארוך ל- SAT"], [11, 39, 39, "רדוקציה ממסלול ארוך ל- SAT"], [11, 40, 48, "רדוקציה מכיסוי צמתים ל- SAT"], [11, 49, 49, "שאלת מיליון הדולר"], [12, 2, 2, "שאלת מיליון הדולר"], [12, 3, 3, "רדוקציה (צמצום)"], [12, 4, 11, "הרכבת רדוקציות"], [12, 12, 14, "NP-שלמות"], [12, 15, 23, "3-SAT היא NP-שלמה"], [12, 24, 35, "כיסוי צמתים היא NP-שלמה"], [12, 36, 46, "מסלול ארוך היא NP-שלמה"], [12, 47, 48, "סיכום"]];
 /* ================== topics ================== */
@@ -1573,10 +1717,10 @@ function findPath(adj, s, t, mode) {
   else { const rec = x => { if (x === t) return true; for (const y of adj[x] || []) if (par[y] === undefined) { par[y] = x; if (rec(y)) return true; } return false; }; rec(s); }
   return par;
 }
-function gPos(g, s, input, preset) { return input.__default && preset ? scalePos(preset) : layeredLayout(g.nodes, g.edges, s); }
+function gPos(g, s, input, preset) { const U = input.__pos; if (U && g.nodes.every(n => U[n])) { const o = {}; g.nodes.forEach(n => o[n] = { x: U[n].x, y: U[n].y }); return o; } return input.__default && preset ? scalePos(preset) : layeredLayout(g.nodes, g.edges, s); }
 /* ---------- graph helpers ---------- */
 function gInputs(def, { weighted, directed, start = "1", startLabel = "צומת התחלה s", extra = [] } = {}) {
-  return [{ key: "g", label: "הגרף (קשת בכל שורה)", def, multi: true, hint: `${directed ? `כל שורה היא קשת מכוונת, למשל ${c("1->2" + (weighted ? " 4" : ""))}` : `כל שורה היא קשת, למשל ${c("1-2" + (weighted ? " 4" : ""))}`}${weighted ? ". המספר בסוף הוא המשקל" : ""}. עד 10 צמתים.` },
+  return [{ key: "g", label: "או בכתיבה: קשת בכל שורה", def, multi: true, graph: { weighted: !!weighted, directed: !!directed }, hint: `${directed ? `כל שורה היא קשת מכוונת, למשל ${c("1->2" + (weighted ? " 4" : ""))}` : `כל שורה היא קשת, למשל ${c("1-2" + (weighted ? " 4" : ""))}`}${weighted ? ". המספר בסוף הוא המשקל" : ""}. עד 10 צמתים.` },
     ...(start !== null ? [{ key: "s", label: startLabel, def: start, size: 5 }] : []), ...extra];
 }
 function gParse(i, opt) {
