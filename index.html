@@ -436,7 +436,7 @@ function arrRow({ label, vals, base = 0, hl = {}, ptr = {}, idxShow = true, empt
   return h + "</div></div>";
 }
 const LEG = { idle: "#fff", cur: "var(--orange)", cmp: "var(--green)", done: "var(--done)", ok: "var(--cyan)", sel: "var(--pink)", vis: "var(--cyan-t);border-color:var(--pink)", S: "var(--cyan)", T: "var(--pink-t)" };
-const LEGE = { tree: ["var(--pen)", 0], flow: ["var(--pen)", 0], path: ["var(--mag)", 0], cur: ["var(--mag)", 0], match: ["var(--green-d)", 0], cand: ["var(--green-d)", 1], cut: ["var(--mag)", 1] };
+const LEGE = { tree: ["var(--pen)", 0], flow: ["var(--pen)", 0], path: ["var(--mag)", 0], cur: ["var(--mag)", 0], match: ["var(--green-d)", 0], cand: ["var(--green-d)", 1], cut: ["var(--mag)", 1], dn: ["#b09aa4", 1], mg: ["#c98a12", 0], up: ["var(--wine)", 0] };
 function legend(items) {
   return items.map(([k, t]) => k.startsWith("e:") ? `<span><i class="e ${LEGE[k.slice(2)][1] ? "dash" : ""}" style="border-color:${LEGE[k.slice(2)][0]}"></i>${t}</span>` : `<span><i style="background:${LEG[k]}"></i>${t}</span>`).join("");
 }
@@ -1041,7 +1041,7 @@ algo({
   opts: [{ key: "k", label: "לפצל ל:", def: 2, choices: [[2, "2", "כמו בהרצאה"], [3, "3"], [4, "4"]] }],
   code: o => o.k === 2 ? ["MergeSort(A[1,…,n])", "  If n = 1 Then Return A.", "  B1 = MergeSort(A[1, …, n/2]).", "  B2 = MergeSort(A[n/2+1, …, n]).", "  Return Merge(B1,B2).", "", ...MERGE_CODE]
     : ["MergeSort(A[1,…,n])", "  If n = 1 Then Return A.", ...Array.from({ length: o.k }, (_, j) => `  B${j + 1} = MergeSort(A[${j === 0 ? "1" : (j === 1 ? "n/" + o.k : j + "n/" + o.k) + "+1"}, …, ${j === o.k - 1 ? "n" : (j === 0 ? "n/" + o.k : (j + 1) + "n/" + o.k)}]).`), `  Return Merge(${Array.from({ length: o.k }, (_, j) => "B" + (j + 1)).join(",")}).`, "", ...MERGEK_CODE(o.k), "", `// T(n) = ${o.k}T(n/${o.k}) + O(${o.k}n)`],
-  legend: [["cur","הקריאה שרצה"],["vis","מחכה לקריאה רקורסיבית"],["ok","כבר ממוין"]],
+  legend: [["cur","הקריאה שרצה"],["vis","מחכה לקריאה רקורסיבית"],["ok","כבר ממוין"],["e:dn","חץ למטה: מפצלים"],["e:mg","חץ למעלה: ממזגים עכשיו"],["e:up","חץ למעלה: חלק ממוין שחזר"]],
   inputs: [{ key: "a", label: "המערך A", def: "5, 24, 4, 1, 13, 4, 10, 66", hint: "עד 12 מספרים. בהרצאה מניחים ש-n חזקה של 2, אבל זה עובד גם אחרת." }],
   parse(i) { const a = parseNums(i.a, "מערך"); if (a.length > 12) throw "עד 12 מספרים."; return { a }; },
   run(input) {
@@ -1077,13 +1077,29 @@ algo({
   },
   render(st) {
     const n = st.nodes.length ? st.nodes[0].r + 1 : 0;
-    const CW = 46, RH = 62, maxD = Math.max(...st.nodes.map(x => x.d));
-    const w = n * CW + 10, h = (maxD + 1) * RH + 10;
+    const CW = 46, RH = 80, BH = 42, maxD = Math.max(...st.nodes.map(x => x.d));
+    const w = n * CW + 10, h = maxD * RH + BH + 10;
     let s = `<div data-k="mstree" style="position:relative;width:${w}px;height:${h}px;margin:0 auto;direction:ltr">`;
+    /* arrows: down = splitting into a recursive call, up = the sorted part goes back to be merged */
+    let ar = `<svg data-k="msar" width="${w}" height="${h}" style="position:absolute;left:0;top:0;overflow:visible;pointer-events:none"><defs>` +
+      `<marker id="msd" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#b09aa4"/></marker>` +
+      `<marker id="msu" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="var(--wine)"/></marker>` +
+      `<marker id="msm" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#c98a12"/></marker></defs>`;
+    for (const ch of st.nodes) {
+      if (!ch.d) continue;
+      const par = st.nodes.find(p => p.d === ch.d - 1 && p.l <= ch.l && ch.r <= p.r); if (!par) continue;
+      const cx = ((ch.l + ch.r + 1) / 2) * CW + 2, px = ((par.l + par.r + 1) / 2) * CW + 2;
+      const y1 = par.d * RH + 4 + BH + 3, y2 = ch.d * RH + 4 - 3;
+      const sx = px + (cx - px) * 0.45;
+      const merging = par.st === "cur" && (st.m || st.mk), up = par.st === "done" || merging;
+      if (!up) ar += `<line x1="${sx}" y1="${y1}" x2="${cx}" y2="${y2 - 2}" stroke="#b09aa4" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#msd)"/>`;
+      else ar += `<line x1="${cx}" y1="${y2}" x2="${sx}" y2="${y1 + 2}" stroke="${merging ? "#c98a12" : "var(--wine)"}" stroke-width="${merging ? 3 : 2.2}" marker-end="url(#${merging ? "msm" : "msu"})"/>`;
+    }
+    s += ar + `</svg>`;
     const col = { cur: ["--orange", "#fff"], wait: ["--cyan-t", "inherit"], done: ["--cyan", "var(--ink)"] };
     for (const nd of st.nodes) {
       const [bg, fg] = col[nd.st];
-      s += `<div data-k="ms${nd.l}-${nd.r}" style="position:absolute;left:${nd.l * CW + 5}px;top:${nd.d * RH + 4}px;width:${(nd.r - nd.l + 1) * CW - 6}px;height:${RH - 20}px;background:var(${bg});color:${fg};border-radius:4px;transition:background .3s,color .3s;font-family:JetBrains Mono,monospace;display:flex;align-items:center;justify-content:space-around;font-weight:600;font-size:14px">${nd.vals.map(v => `<span>${esc(v)}</span>`).join("")}</div>`;
+      s += `<div data-k="ms${nd.l}-${nd.r}" style="position:absolute;left:${nd.l * CW + 5}px;top:${nd.d * RH + 4}px;width:${(nd.r - nd.l + 1) * CW - 6}px;height:${BH}px;background:var(${bg});color:${fg};border-radius:4px;transition:background .3s,color .3s;font-family:'IBM Plex Mono',monospace;display:flex;align-items:center;justify-content:space-around;font-weight:600;font-size:14px">${nd.vals.map(v => `<span>${esc(v)}</span>`).join("")}</div>`;
     }
     s += `</div>`;
     const panel = st.m ? renderMerge(st.m) : st.mk ? renderMergeK(st.mk) : "";
