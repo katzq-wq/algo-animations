@@ -14,13 +14,13 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Hebrew:wght@400;500;700;800&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
 <style>
 /* VOICE: friendly study companion — calm, clear, encouraging.
    IDEA: a squared math notebook page, marked up with highlighters.
    PICTURE: the running algorithm drawn in pen on graph paper.
-   COLOUR and TYPE: pen ink #1d2b53 on white; yellow = now, green = checking, blue = seen, pink = changed. Varela Round + Heebo.
+   COLOUR and TYPE: pen ink #1d2b53 on white; yellow = now, green = checking, blue = seen, pink = changed. Varela Round + "Noto Sans Hebrew".
    LAYOUT: quiet topic list, title, the notebook page with its note line and big step buttons, the pseudo-code card beside it. */
 :root{color-scheme:light;
   --paper:#f7f4f5; --grid:transparent; --ink:#2b1520; --muted:#7a5a68; --line:#ead9e0; --soft:#f6ecf0;
@@ -36,15 +36,15 @@
 }
 *{box-sizing:border-box;min-width:0}
 html,body{margin:0;height:100%}
-body{font:16px/1.65 Heebo,Arial,sans-serif;background:var(--paper);color:var(--ink);display:flex;flex-direction:column;overflow-x:clip}
+body{font:16px/1.65 "Noto Sans Hebrew",Arial,sans-serif;background:var(--paper);color:var(--ink);display:flex;flex-direction:column;overflow-x:clip}
 button,input{font:inherit;color:inherit}
 :focus-visible{outline:3px solid var(--pen);outline-offset:2px;border-radius:6px}
-h1,h2,.display{font-family:Heebo,Arial,sans-serif;font-weight:700;letter-spacing:0}
+h1,h2,.display{font-family:"Noto Sans Hebrew",Arial,sans-serif;font-weight:700;letter-spacing:0}
 header{flex-shrink:0;background:var(--wine);color:#fff;border-bottom:0;padding:10px 20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
 header h1{margin:0;font-size:21px;white-space:nowrap}
 header h1 a{color:inherit;text-decoration:none;display:block;cursor:pointer;padding:2px 4px}
 header h1 b{font-weight:700}
-header h1 span{font-family:Heebo,Arial,sans-serif;font-size:16px;color:#f1d3dd;margin-inline-start:10px;font-weight:400}
+header h1 span{font-family:"Noto Sans Hebrew",Arial,sans-serif;font-size:16px;color:#f1d3dd;margin-inline-start:10px;font-weight:400}
 #menuBtn{display:none;background:rgba(255,255,255,.12);color:#fff;border:1px solid rgba(255,255,255,.25);border-radius:12px;width:46px;height:46px;cursor:pointer;font-size:20px}
 .search{position:relative;flex:1 1 280px;max-width:520px;margin-inline-start:auto}
 .search input{width:100%;height:40px;border:0;border-radius:4px;padding:0 44px 0 18px;font-size:16px;color:var(--ink);background:#fff}
@@ -132,13 +132,13 @@ main{flex:1;overflow-y:auto;padding:22px clamp(14px,2.4vw,34px) 44px}
 .side{display:flex;flex-direction:column;gap:12px}
 .code{background:#fff;color:var(--ink);border:1.5px solid var(--line);border-radius:var(--r);padding:12px 0;font:13px/1.75 "IBM Plex Mono",Consolas,monospace;max-height:62vh;overflow:auto;
 }
-.code-title{font:500 15px Heebo,Arial,sans-serif;padding:0 16px 8px;color:var(--muted)}
+.code-title{font:500 15px "Noto Sans Hebrew",Arial,sans-serif;padding:0 16px 8px;color:var(--muted)}
 #code{direction:ltr;text-align:left}
 #code div{display:flex;white-space:pre-wrap;padding-right:12px}
 #code .ln{flex:none;width:34px;text-align:right;padding-right:10px;color:#9aa3bd;user-select:none}
 #code .tx{flex:1;padding-left:2.5ch;text-indent:-2.5ch}
 #code div.on{background:var(--orange-t);box-shadow:inset 4px 0 0 var(--wine);font-weight:600;color:var(--wine-d)}
-#code.he{direction:rtl;text-align:right;font-family:Heebo,Arial,sans-serif;font-size:15.5px}
+#code.he{direction:rtl;text-align:right;font-family:"Noto Sans Hebrew",Arial,sans-serif;font-size:15.5px}
 #code.he div{padding:0 0 0 12px}
 #code.he .ln{text-align:left;padding:0 0 0 10px;font-family:"IBM Plex Mono",monospace;font-size:12px}
 #code.he .tx{padding:0 2ch 0 0;text-indent:-2ch}
@@ -181,7 +181,7 @@ code{background:var(--soft);padding:0 5px;border-radius:6px;white-space:nowrap}
 .formula .new{background:var(--green-t);border-radius:3px}
 .table{margin:10px auto 0;border-collapse:separate;border-spacing:3px;font:14px "IBM Plex Mono",monospace;direction:ltr}
 .table td{padding:3px 10px;text-align:center}
-.table td.h{color:var(--muted);font-family:Heebo,Arial,sans-serif;font-size:14px;text-align:right}
+.table td.h{color:var(--muted);font-family:"Noto Sans Hebrew",Arial,sans-serif;font-size:14px;text-align:right}
 .table td.v{background:#fff;border:1px solid var(--line);border-radius:6px;font-weight:600;transition:background .3s}
 .table td.v.cur{background:var(--wine);color:#fff}
 .table td.v.ok{background:var(--cyan)}
@@ -202,7 +202,7 @@ svg text{font-family:"IBM Plex Mono",monospace}
 .eg .lb{transition:transform .5s ease}
 .nd circle,.nd rect{fill:#fff;stroke:#9c8590;stroke-width:2;transition:fill .3s,stroke .3s,opacity .3s}
 .nd text{font-size:15px;font-weight:600;fill:var(--ink);text-anchor:middle;dominant-baseline:central}
-.nd text.sub{font-size:12.5px;font-weight:700;fill:var(--muted);font-family:Heebo,Arial,sans-serif;paint-order:stroke;stroke:#fff;stroke-width:5px;stroke-linejoin:round}
+.nd text.sub{font-size:12.5px;font-weight:700;fill:var(--muted);font-family:"Noto Sans Hebrew",Arial,sans-serif;paint-order:stroke;stroke:#fff;stroke-width:5px;stroke-linejoin:round}
 .nd.vis circle,.nd.vis rect{fill:var(--cyan-t);stroke:var(--pen)}
 .nd.cur circle,.nd.cur rect{fill:var(--wine);stroke:var(--wine-d);stroke-width:2.6}.nd.cur text:not(.sub){fill:#fff}
 .nd.done circle,.nd.done rect{fill:var(--done);stroke:#a8949d}
@@ -257,7 +257,7 @@ body.home nav{display:none}
 body.home #main{background:#fff}
 #welcome{max-width:1080px;margin:0 auto;padding-top:2vh}
 .hero{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr);gap:24px;align-items:center;min-height:52vh}
-.hero h2{font-size:clamp(34px,4.4vw,56px);line-height:1.08;margin:0 0 14px;color:var(--wine-d)}
+.hero h2{font-size:clamp(34px,4.4vw,56px);line-height:1.08;margin:0 0 14px;color:var(--wine-d);font-weight:800}
 .hero p{font-size:19px;color:var(--muted);max-width:34ch;margin:0 0 24px}
 .hero-fig{margin:0}
 .hero-fig svg{width:100%;height:auto;direction:ltr;overflow:visible}
@@ -266,18 +266,18 @@ body.home #main{background:#fff}
 #heroSvg .ht{fill:none;stroke-width:4;stroke-linecap:round;stroke-dasharray:1;stroke-dashoffset:1;transition:stroke-dashoffset .6s ease}
 #heroSvg .ht.on{stroke-dashoffset:0}
 #heroSvg circle{fill:#fff;stroke:#d8c8cf;stroke-width:2;transition:fill .5s ease,stroke .5s ease,r .3s ease}
-#heroSvg text{font:500 14px Heebo,Arial,sans-serif;text-anchor:middle;dominant-baseline:central;fill:#9c8590;transition:fill .4s}
+#heroSvg text{font:500 14px "Noto Sans Hebrew",Arial,sans-serif;text-anchor:middle;dominant-baseline:central;fill:#9c8590;transition:fill .4s}
 #heroSvg circle.rip{fill:none!important;stroke-width:3;transform-box:fill-box;transform-origin:center;animation:rip 1.1s ease-out forwards}
 @keyframes rip{from{transform:scale(1);opacity:.8}to{transform:scale(2.6);opacity:0}}
 #heroSvg g.in{animation:pop .5s cubic-bezier(.3,1.5,.5,1) both}
 @keyframes pop{from{transform:scale(0);opacity:0}to{transform:scale(1);opacity:1}}
-.list-h{font:700 20px Heebo,Arial,sans-serif;margin:40px 0 6px;color:var(--ink)}
+.list-h{font:700 20px "Noto Sans Hebrew",Arial,sans-serif;margin:40px 0 6px;color:var(--ink)}
 .tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:0 32px}
 .tiles button{all:unset;box-sizing:border-box;display:flex!important;align-items:baseline;gap:14px;padding:14px 6px;border-bottom:1px solid var(--line);cursor:pointer;font-size:18px;font-weight:500;color:var(--ink);position:relative;overflow:hidden;background:transparent!important;min-height:0!important;box-shadow:none!important;border-radius:0!important}
 .tiles button::before{content:"";position:absolute;inset:0;background:var(--c);opacity:.12;transform:scaleX(0);transform-origin:right;transition:transform .35s ease;z-index:0}
 .tiles button:hover::before,.tiles button:focus-visible::before{transform:scaleX(1)}
 .tiles button>*{position:relative;z-index:1}
-.tiles button .n{font:700 15px Heebo,Arial,sans-serif;color:var(--c);min-width:26px}
+.tiles button .n{font:700 15px "Noto Sans Hebrew",Arial,sans-serif;color:var(--c);min-width:26px}
 .tiles button .nm{flex:1}
 .tiles button small{display:inline!important;margin:0!important;font-size:14px;color:var(--muted);font-weight:400}
 .tiles button .dot{width:10px;height:10px;border-radius:50%;background:var(--c);align-self:center;transition:transform .3s}
