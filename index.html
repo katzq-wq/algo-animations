@@ -7,226 +7,254 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="icon-192.png">
-<meta name="theme-color" content="#ff8a27">
+<meta name="theme-color" content="#ffffff">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="הנפשות אלגו">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Varela+Round&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
 <style>
-/* VOICE: playful but exact, like a good visual-algorithms lab.
-   IDEA: VisuAlgo-style colour blocks — every state has its own bright colour.
-   PICTURE: the running algorithm, large, on a white board.
-   COLOUR and TYPE: orange = now, green = compared, cyan = finished, pink = changed; Rubik + JetBrains Mono.
-   LAYOUT: topic rail, title + search, board with orange caption and transport, green code plate. */
+/* VOICE: friendly study companion — calm, clear, encouraging.
+   IDEA: a squared math notebook page, marked up with highlighters.
+   PICTURE: the running algorithm drawn in pen on graph paper.
+   COLOUR and TYPE: pen ink #1d2b53 on white; yellow = now, green = checking, blue = seen, pink = changed. Varela Round + Assistant.
+   LAYOUT: quiet topic list, title, the notebook page with its note line and big step buttons, the pseudo-code card beside it. */
 :root{color-scheme:light;
-  --bg:#fff; --ink:#222; --muted:#777; --line:#e6e6e6; --soft:#f5f5f5;
-  --orange:#ff8a27; --orange-t:#ffe6d1; --green:#52bc69; --green-d:#2f8a46; --green-t:#dcf3e1;
-  --cyan:#2ebbd1; --cyan-t:#d4f1f6; --pink:#e64980; --pink-t:#fde0ea; --gray:#bbb; --idle:#eee;
+  --paper:#ffffff; --grid:#e6edf7; --ink:#1d2b53; --muted:#56618a; --line:#dde3ee; --soft:#f4f7fc;
+  --pen:#2f5bd3; --mag:#d6336c;
+  /* highlighter set (old names kept so every animation picks them up) */
+  --orange:#ffd23f; --orange-t:#fff5c9;
+  --green:#5fd3a0; --green-d:#1f7a54; --green-t:#dcf6ea;
+  --cyan:#9ccdf4; --cyan-t:#e3f1fd;
+  --pink:#ff8ab6; --pink-t:#ffe4ef;
+  --idle:#eef1f7; --gray:#b9c1d1; --done:#d8deea;
+  --bg:var(--paper);
+  --r:14px;
 }
 *{box-sizing:border-box;min-width:0}
 html,body{margin:0;height:100%}
-body{font:16px/1.5 Rubik,Arial,sans-serif;background:var(--bg);color:var(--ink);display:flex;flex-direction:column;overflow-x:clip}
+body{font:17px/1.6 Assistant,"Segoe UI",Arial,sans-serif;background:var(--paper);color:var(--ink);display:flex;flex-direction:column;overflow-x:clip}
 button,input{font:inherit;color:inherit}
-header{flex-shrink:0;background:var(--orange);color:#fff;padding:10px 18px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
-header h1{margin:0;font-size:19px;font-weight:700;white-space:nowrap}
-header h1 span{font-weight:400;opacity:.9}
-header h1 a{color:inherit;text-decoration:none;display:block;cursor:pointer}
-header h1 a:hover{text-decoration:underline}
-nav button.home{font-weight:600;margin-bottom:4px}
-#menuBtn{display:none;background:rgba(255,255,255,.2);border:0;border-radius:6px;width:40px;height:40px;cursor:pointer;font-size:18px;color:#fff}
+:focus-visible{outline:3px solid var(--pen);outline-offset:2px;border-radius:6px}
+h1,h2,.display{font-family:"Varela Round",Assistant,sans-serif;font-weight:400}
+header{flex-shrink:0;background:var(--paper);border-bottom:1px solid var(--line);padding:10px 20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+header h1{margin:0;font-size:22px;white-space:nowrap}
+header h1 a{color:inherit;text-decoration:none;display:block;cursor:pointer;padding:2px 4px}
+header h1 b{font-weight:400;background:linear-gradient(transparent 58%, var(--orange) 58%, var(--orange) 92%, transparent 92%);padding:0 3px}
+header h1 span{font-family:Assistant,sans-serif;font-size:16px;color:var(--muted);margin-inline-start:8px}
+#menuBtn{display:none;background:var(--soft);border:1px solid var(--line);border-radius:12px;width:46px;height:46px;cursor:pointer;font-size:20px}
 .search{position:relative;flex:1 1 280px;max-width:520px;margin-inline-start:auto}
-.search input{width:100%;height:42px;border:0;border-radius:6px;padding:0 40px 0 14px;font-size:15.5px;color:var(--ink);background:#fff}
-.search input:focus{outline:3px solid rgba(255,255,255,.55)}
-.search .ic{position:absolute;right:12px;top:10px;color:var(--orange);font-size:17px;pointer-events:none}
-.results{position:absolute;top:48px;inset-inline:0;background:#fff;color:var(--ink);border-radius:8px;box-shadow:0 12px 36px rgba(0,0,0,.18);max-height:70vh;overflow-y:auto;z-index:20;padding:6px}
+.search input{width:100%;height:46px;border:1.5px solid var(--line);border-radius:999px;padding:0 44px 0 18px;font-size:16px;color:var(--ink);background:var(--soft)}
+.search input:focus{outline:0;border-color:var(--pen);background:#fff}
+.search .ic{position:absolute;right:16px;top:9px;color:var(--muted);font-size:19px;pointer-events:none}
+.results{position:absolute;top:52px;inset-inline:0;background:#fff;color:var(--ink);border-radius:var(--r);box-shadow:0 18px 40px rgba(29,43,83,.18);max-height:70vh;overflow-y:auto;z-index:20;padding:8px;border:1px solid var(--line)}
 .results:empty{display:none}
-.results .grp{font-size:12px;color:var(--muted);padding:8px 10px 2px}
-.results a{display:block;padding:8px 10px;border-radius:6px;color:inherit;text-decoration:none;cursor:pointer}
+.results .grp{font-size:14px;color:var(--muted);padding:8px 10px 2px}
+.results a{display:block;padding:9px 12px;border-radius:10px;color:inherit;text-decoration:none;cursor:pointer}
 .results a:hover,.results a.on{background:var(--orange-t)}
 .results a b{font-weight:600}
-.results a small{display:block;color:var(--muted);font-size:13px}
-.results .none{padding:12px;color:var(--muted);font-size:14px}
+.results a small{display:block;color:var(--muted);font-size:14px}
+.results .none{padding:12px;color:var(--muted);font-size:15px}
 .layout{flex:1;display:flex;min-height:0}
-nav{width:248px;flex-shrink:0;background:var(--soft);overflow-y:auto;padding:6px 0 28px}
-#backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:25}
-nav .topic{padding:12px 16px 3px;font-size:12.5px;color:var(--muted);font-weight:600;display:flex;gap:7px;align-items:center}
-nav .topic i{font-style:normal;background:var(--cyan);color:#fff;border-radius:4px;font:700 11px "JetBrains Mono",monospace;padding:1px 5px}
-nav button{display:block;width:100%;text-align:right;background:none;border:0;padding:6px 16px 6px 12px;font-size:14.5px;cursor:pointer;border-right:4px solid transparent}
-nav button:hover{background:#ececec}
-nav button.on{background:#fff;border-right-color:var(--orange);font-weight:600}
-main{flex:1;overflow-y:auto;padding:18px clamp(12px,2vw,28px) 36px}
-#welcome{max-width:760px;margin:5vh auto 0}
-#welcome h2{font-size:clamp(28px,3.4vw,40px);line-height:1.1;margin:0 0 10px}
-#welcome p{color:var(--muted);font-size:17px;margin:0 0 20px}
-.tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px}
-.tiles button{border:0;border-radius:8px;padding:14px;text-align:right;cursor:pointer;color:#fff;font-weight:600;font-size:15px;min-height:76px}
-.tiles button small{display:block;font-weight:400;opacity:.9;font-size:12.5px}
-.head{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;margin-bottom:12px}
-.head .t{flex:1 1 360px}
-.head h2{margin:0;font-size:clamp(23px,2.4vw,30px);line-height:1.15}
-.head .tag{color:var(--muted);font-size:15.5px;margin-top:3px}
-.badge{display:inline-block;font-size:12.5px;font-weight:600;border-radius:4px;padding:2px 8px;margin-top:6px}
-.badge.lec{background:var(--cyan-t);color:#127f91}
-.badge.ext{background:var(--pink-t);color:#b02a5b}
+nav{width:260px;flex-shrink:0;background:var(--paper);border-left:1px solid var(--line);overflow-y:auto;padding:10px 0 30px}
+nav .topic{padding:14px 20px 4px;font-size:14px;color:var(--muted);font-weight:600}
+nav .topic i{font:500 12px "IBM Plex Mono",monospace;font-style:normal;margin-inline-end:8px;color:#9aa3bd}
+nav button{display:block;width:calc(100% - 16px);margin:1px 8px;text-align:right;background:none;border:0;border-radius:10px;padding:8px 12px;font-size:16px;cursor:pointer;line-height:1.35}
+nav button:hover{background:var(--soft)}
+nav button.on{background:var(--orange);font-weight:600}
+nav button.home{font-weight:600;margin-bottom:4px}
+#backdrop{display:none;position:fixed;inset:0;background:rgba(29,43,83,.35);z-index:25}
+main{flex:1;overflow-y:auto;padding:22px clamp(14px,2.4vw,34px) 44px}
+#welcome{max-width:820px;margin:4vh auto 0}
+#welcome h2{font-size:clamp(30px,3.6vw,44px);line-height:1.12;margin:0 0 12px;text-wrap:balance}
+#welcome p{color:var(--muted);font-size:18px;margin:0 0 26px;max-width:60ch}
+.tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px}
+.tiles button{border:1.5px solid var(--ink);border-radius:var(--r);padding:14px 16px;text-align:right;cursor:pointer;color:var(--ink);font-size:17px;font-weight:600;min-height:84px;background:#fff;box-shadow:3px 3px 0 var(--ink);transition:transform .15s,box-shadow .15s}
+.tiles button:hover{transform:translate(-1px,-1px);box-shadow:4px 4px 0 var(--ink)}
+.tiles button small{display:block;font-weight:400;font-size:14px;color:var(--muted);margin-top:4px}
+.tiles button i{display:block;width:34px;height:8px;border-radius:4px;margin-bottom:10px}
+.head{display:flex;flex-wrap:wrap;align-items:center;gap:10px 12px;margin-bottom:14px}
+.head .t{flex:1 1 380px}
+.head h2{margin:0;font-size:clamp(26px,2.6vw,34px);line-height:1.15}
+.head .tag{color:var(--muted);font-size:17px;margin-top:4px;max-width:70ch}
+.badge{display:inline-block;font-size:14px;font-weight:600;border-radius:999px;padding:2px 12px;margin-top:8px}
+.badge.lec{background:var(--cyan-t);color:#1f4f8a}
+.badge.ext{background:var(--pink-t);color:#9c1f4f}
 .badge.own{background:var(--idle);color:var(--muted)}
-.tb{border:0;background:var(--idle);border-radius:6px;height:40px;padding:0 14px;cursor:pointer;font-size:14.5px;font-weight:500}
-.tb:hover{background:#e2e2e2}
-.tb[aria-expanded=true]{background:var(--ink);color:#fff}
-.drawer{background:var(--soft);border-radius:8px;padding:14px 18px;margin-bottom:12px;line-height:1.75;font-size:15.5px}
-.drawer b{color:var(--orange)}
-.inputs{display:flex;flex-wrap:wrap;gap:12px 16px;align-items:flex-end}
-.inputs label{display:flex;flex-direction:column;gap:5px;font-size:13px;color:var(--muted)}
-.inputs input,.inputs textarea{font:14.5px "JetBrains Mono",monospace;padding:9px 12px;border:2px solid var(--line);border-radius:6px;background:#fff;color:var(--ink);direction:ltr;text-align:left}
-.inputs input:focus,.inputs textarea:focus{outline:0;border-color:var(--orange)}
-.inputs textarea{min-width:220px;min-height:100px;resize:vertical;font-size:13.5px}
-.inputs .hint{font-size:12.5px;max-width:300px;line-height:1.5}
-.btn{height:42px;padding:0 18px;border-radius:6px;border:0;background:var(--orange);color:#fff;cursor:pointer;font-weight:600}
-.btn.ghost{background:var(--idle);color:var(--ink)}
-.err{color:var(--pink);font-size:14px;width:100%;font-weight:500}
+.tb{border:1.5px solid var(--line);background:#fff;border-radius:999px;height:44px;padding:0 18px;cursor:pointer;font-size:16px;font-weight:600}
+.tb:hover{border-color:var(--ink)}
+.tb[aria-expanded=true]{background:var(--ink);color:#fff;border-color:var(--ink)}
+.drawer{background:var(--soft);border-radius:var(--r);padding:16px 20px;margin-bottom:14px;line-height:1.8;font-size:17px;max-width:90ch}
+.drawer b{color:var(--ink);background:linear-gradient(transparent 60%, var(--orange-t) 60%)}
+.inputs{display:flex;flex-wrap:wrap;gap:12px 18px;align-items:flex-end}
+.inputs label{display:flex;flex-direction:column;gap:6px;font-size:15px;color:var(--muted)}
+.inputs input,.inputs textarea{font:15px "IBM Plex Mono",monospace;padding:10px 12px;border:1.5px solid var(--line);border-radius:10px;background:#fff;color:var(--ink);direction:ltr;text-align:left}
+.inputs input:focus,.inputs textarea:focus{outline:0;border-color:var(--pen)}
+.inputs textarea{min-width:230px;min-height:110px;resize:vertical;font-size:14px}
+.inputs .hint{font-size:14px;max-width:300px;line-height:1.5}
+.btn{height:46px;padding:0 22px;border-radius:999px;border:0;background:var(--ink);color:#fff;cursor:pointer;font-weight:600}
+.btn.ghost{background:#fff;color:var(--ink);border:1.5px solid var(--line)}
+.err{color:var(--mag);font-size:15px;width:100%;font-weight:600}
 .err:empty{display:none}
-.knobs{display:flex;flex-wrap:wrap;gap:10px 22px;align-items:center;background:var(--soft);border-radius:6px;padding:10px 14px;margin-bottom:12px}
+.knobs{display:flex;flex-wrap:wrap;gap:12px 24px;align-items:center;margin-bottom:14px}
 .knobs:empty{display:none}
-.knob{display:flex;gap:8px;align-items:center;font-size:14px;color:var(--muted)}
-.seg{display:inline-flex;border-radius:5px;overflow:hidden}
-.seg button{border:0;background:#e6e6e6;padding:7px 13px;font-weight:600;font-size:14px;cursor:pointer}
-.seg button:hover{background:#dcdcdc}
-.seg button.on{background:var(--orange);color:#fff}
-.seg button small{font-weight:400;opacity:.8;font-size:11.5px;margin-inline-start:3px}
-.stage{display:grid;grid-template-columns:minmax(0,1fr) minmax(290px,370px);gap:14px;align-items:start}
-.board{border:2px solid var(--line);border-radius:6px;overflow:hidden;background:#fff}
-.viz{padding:16px 12px 6px;min-height:320px;display:flex;flex-direction:column;justify-content:center;overflow-x:auto}
+.knob{display:flex;gap:10px;align-items:center;font-size:16px;color:var(--muted)}
+.seg{display:inline-flex;border:1.5px solid var(--line);border-radius:999px;padding:3px;gap:2px;background:#fff}
+.seg button{border:0;background:none;border-radius:999px;padding:6px 14px;font-weight:600;font-size:15px;cursor:pointer}
+.seg button:hover{background:var(--soft)}
+.seg button.on{background:var(--orange)}
+.seg button small{font-weight:400;color:var(--muted);font-size:13px;margin-inline-start:4px}
+.stage{display:grid;grid-template-columns:minmax(0,1fr) minmax(290px,370px);gap:18px;align-items:start}
+.board{border:1.5px solid var(--ink);border-radius:18px;overflow:hidden;background:#fff;box-shadow:4px 4px 0 var(--ink)}
+.viz{padding:18px 14px 8px;min-height:320px;display:flex;flex-direction:column;justify-content:center;overflow-x:auto;
+  background-color:#fff;background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
 .viz svg{display:block;margin:0 auto;width:100%;height:auto}
-.legend{display:flex;flex-wrap:wrap;justify-content:center;gap:5px 14px;font-size:13px;color:var(--muted);padding:2px 12px 12px}
-.legend span{display:inline-flex;align-items:center;gap:5px}
-.legend i{width:14px;height:14px;border-radius:50%;display:inline-block}
-.legend i.e{width:20px;height:0;border-radius:0;border-top:4px solid}
+.legend{display:flex;flex-wrap:wrap;justify-content:center;gap:6px 16px;font-size:15px;color:var(--ink);padding:8px 14px 12px;background:#fff;border-top:1px dashed var(--line)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:16px;height:16px;border-radius:50%;display:inline-block;border:1.5px solid var(--ink)}
+.legend i.e{width:24px;height:0;border-radius:0;border:0;border-top:4px solid}
 .legend i.e.dash{border-top-style:dashed}
-.caption{background:var(--orange);color:#fff;padding:11px 16px;font-size:16px;line-height:1.6;min-height:68px;display:flex;gap:10px;align-items:flex-start}
-.caption .n{flex:none;font:700 12px "JetBrains Mono",monospace;background:rgba(255,255,255,.25);border-radius:4px;padding:2px 6px;margin-top:3px}
-.caption code{background:rgba(255,255,255,.25);color:#fff}
-.transport{display:flex;align-items:center;gap:7px;padding:9px 12px;background:#fff;border-top:2px solid var(--line)}
-.ib{width:44px;height:42px;border-radius:5px;border:0;background:var(--idle);cursor:pointer;display:grid;place-items:center;flex:none}
-.ib svg{width:17px;height:17px;fill:currentColor}
-.ib:hover{background:#e2e2e2}
-.ib.play{background:var(--orange);color:#fff;width:52px}
+.caption{background:var(--orange-t);color:var(--ink);padding:14px 18px;font-size:18px;line-height:1.65;min-height:76px;display:flex;gap:12px;align-items:flex-start;border-top:1.5px solid var(--ink)}
+.caption .n{flex:none;font:600 13px "IBM Plex Mono",monospace;background:#fff;border:1px solid var(--line);border-radius:999px;padding:2px 9px;margin-top:4px;color:var(--muted)}
+.caption code{background:#fff}
+.transport{display:flex;align-items:center;gap:8px;padding:10px 12px;background:#fff;border-top:1px solid var(--line);flex-wrap:wrap}
+.ib{height:48px;min-width:48px;padding:0 14px;border-radius:999px;border:1.5px solid var(--line);background:#fff;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px;font-weight:600;font-size:16px;flex:none}
+.ib svg{width:16px;height:16px;fill:currentColor}
+.ib:hover{border-color:var(--ink)}
+.ib.play{background:var(--ink);color:#fff;border-color:var(--ink);min-width:110px}
 .ib:disabled{opacity:.35;cursor:default}
-.scrub{flex:1;accent-color:var(--green);direction:rtl;height:26px}
-.speed{display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--muted)}
-.speed input{width:70px;accent-color:var(--orange)}
-.side{display:flex;flex-direction:column;gap:10px}
-.code{background:var(--green);color:#fff;border-radius:6px;padding:12px 0;font:12.5px/1.7 "JetBrains Mono",Consolas,monospace;max-height:62vh;overflow:auto}
-.code-title{font:600 13px Rubik,sans-serif;padding:0 14px 8px;opacity:.9}
+.scrub{flex:1 1 140px;accent-color:var(--ink);direction:rtl;height:28px}
+.speed{display:flex;align-items:center;gap:6px;font-size:15px;color:var(--muted)}
+.speed input{width:80px;accent-color:var(--ink)}
+.side{display:flex;flex-direction:column;gap:12px}
+.code{background:#fff;color:var(--ink);border:1.5px solid var(--line);border-radius:var(--r);padding:12px 0;font:13px/1.75 "IBM Plex Mono",Consolas,monospace;max-height:62vh;overflow:auto;
+  background-image:linear-gradient(transparent calc(1.75em - 1px), var(--grid) 1px);background-size:100% 1.75em;background-position:0 calc(12px + 2.6em)}
+.code-title{font:600 15px Assistant,sans-serif;padding:0 16px 8px;color:var(--muted)}
 #code{direction:ltr;text-align:left}
 #code div{display:flex;white-space:pre-wrap;padding-right:12px}
-#code .ln{flex:none;width:32px;text-align:right;padding-right:10px;opacity:.6;user-select:none}
+#code .ln{flex:none;width:34px;text-align:right;padding-right:10px;color:#9aa3bd;user-select:none}
 #code .tx{flex:1;padding-left:2.5ch;text-indent:-2.5ch}
-#code div.on{background:var(--green-d)}
-#code.he{direction:rtl;text-align:right;font-family:Rubik,sans-serif;font-size:14px}
+#code div.on{background:var(--orange);font-weight:600}
+#code.he{direction:rtl;text-align:right;font-family:Assistant,sans-serif;font-size:15.5px}
 #code.he div{padding:0 0 0 12px}
-#code.he .ln{text-align:left;padding:0 0 0 10px;font-family:"JetBrains Mono",monospace;font-size:12px}
+#code.he .ln{text-align:left;padding:0 0 0 10px;font-family:"IBM Plex Mono",monospace;font-size:12px}
 #code.he .tx{padding:0 2ch 0 0;text-indent:-2ch}
-#code .ltr{font-family:"JetBrains Mono",monospace;font-size:12.5px}
+#code .ltr{font-family:"IBM Plex Mono",monospace;font-size:13px}
 .chips{display:flex;flex-wrap:wrap;gap:6px}
-.chip{background:var(--soft);border-radius:4px;padding:4px 10px;font-size:13px;display:inline-flex;gap:8px;align-items:baseline}
+.chip{background:var(--soft);border-radius:999px;padding:4px 12px;font-size:15px;display:inline-flex;gap:8px;align-items:baseline}
 .chip span{color:var(--muted)}
-.chip b{font:700 13px "JetBrains Mono",monospace;direction:ltr;unicode-bidi:isolate}
-code,.ltr{direction:ltr;unicode-bidi:isolate;font-family:"JetBrains Mono",monospace;font-size:.9em}
-code{background:var(--idle);padding:0 5px;border-radius:4px;white-space:nowrap}
+.chip b{font:600 14px "IBM Plex Mono",monospace;direction:ltr;unicode-bidi:isolate}
+code,.ltr{direction:ltr;unicode-bidi:isolate;font-family:"IBM Plex Mono",monospace;font-size:.88em}
+code{background:var(--soft);padding:0 5px;border-radius:6px;white-space:nowrap}
 /* arrays */
 .arr{margin:4px 0 12px;text-align:center}
-.arr .lbl{font-size:13px;color:var(--muted);margin-bottom:2px}
-.arr .row{display:flex;direction:ltr;gap:4px;justify-content:center;flex-wrap:wrap}
-.cell{width:46px;text-align:center}
-.cell .ptr{height:22px;display:flex;align-items:flex-end;justify-content:center}
-.cell .ptr em{font:700 10.5px "JetBrains Mono",monospace;font-style:normal;background:var(--ink);color:#fff;border-radius:3px;padding:0 4px;white-space:nowrap}
-.box{height:46px;display:flex;align-items:center;justify-content:center;border-radius:4px;background:var(--idle);font:700 16px "JetBrains Mono",monospace;transition:background .3s,color .3s,opacity .3s,transform .3s}
-.cell .idx{font:11px "JetBrains Mono",monospace;color:var(--muted);margin-top:3px}
-.box.cur{background:var(--orange);color:#fff;transform:translateY(-3px)}
-.box.cmp,.box.cmpp{background:var(--green);color:#fff}
-.box.sel{background:var(--pink);color:#fff;transform:translateY(-3px)}
-.box.ok{background:var(--cyan);color:#fff}
+.arr .lbl{font-size:15px;color:var(--muted);margin-bottom:2px}
+.arr .row{display:flex;direction:ltr;gap:5px;justify-content:center;flex-wrap:wrap}
+.cell{width:48px;text-align:center}
+.cell .ptr{height:24px;display:flex;align-items:flex-end;justify-content:center}
+.cell .ptr em{font:600 11px "IBM Plex Mono",monospace;font-style:normal;background:var(--ink);color:#fff;border-radius:999px;padding:0 6px;white-space:nowrap}
+.box{height:48px;display:flex;align-items:center;justify-content:center;border-radius:10px;background:#fff;border:1.5px solid var(--ink);font:600 17px "IBM Plex Mono",monospace;transition:background .3s,opacity .3s,transform .3s}
+.cell .idx{font:12px "IBM Plex Mono",monospace;color:var(--muted);margin-top:3px}
+.box.cur{background:var(--orange);transform:translateY(-4px)}
+.box.cmp,.box.cmpp{background:var(--green)}
+.box.sel{background:var(--pink);transform:translateY(-4px)}
+.box.ok{background:var(--cyan)}
 .box.vis{background:var(--cyan-t)}
-.box.dim{opacity:.25}
-.box.empty{background:#fff;border:2px dashed var(--line)}
-.cards{display:flex;flex-direction:column;gap:8px;max-width:440px;width:100%;margin:0 auto}
-.card{border-radius:5px;padding:10px 14px;background:var(--idle);display:flex;justify-content:space-between;gap:12px;direction:ltr;font-weight:500;transition:background .3s,color .3s}
-.card.cur{background:var(--orange);color:#fff}
-.card.ok{background:var(--cyan);color:#fff}
+.box.dim{opacity:.3}
+.box.empty{background:transparent;border:1.5px dashed var(--gray)}
+.cards{display:flex;flex-direction:column;gap:8px;max-width:460px;width:100%;margin:0 auto}
+.card{border-radius:12px;padding:10px 16px;background:#fff;border:1.5px solid var(--ink);display:flex;justify-content:space-between;gap:12px;direction:ltr;font-weight:600;transition:background .3s}
+.card.cur{background:var(--orange)}
+.card.ok{background:var(--cyan)}
 .card code{background:none;padding:0;color:inherit}
-.listbox{display:flex;direction:ltr;gap:4px;flex-wrap:wrap;align-items:center;min-height:34px;justify-content:center}
-.listbox span{background:var(--cyan);color:#fff;border-radius:4px;padding:3px 11px;font:700 14px "JetBrains Mono",monospace}
-.listbox em{color:var(--muted);font-style:normal;font-size:13px}
-.sublabel{font-size:13px;color:var(--muted);text-align:center;margin-top:10px}
+.listbox{display:flex;direction:ltr;gap:5px;flex-wrap:wrap;align-items:center;min-height:36px;justify-content:center}
+.listbox span{background:var(--cyan);color:var(--ink);border:1.5px solid var(--ink);border-radius:10px;padding:3px 12px;font:600 15px "IBM Plex Mono",monospace}
+.listbox em{color:var(--muted);font-style:normal;font-size:15px}
+.sublabel{font-size:15px;color:var(--muted);text-align:center;margin-top:10px}
 .two{display:grid;grid-template-columns:1fr 1fr;gap:12px;direction:ltr}
 .two>div{direction:rtl}
-.two .t{font-size:13px;color:var(--muted);text-align:center;font-weight:500}
-.formula{direction:ltr;text-align:left;font:12.5px/1.85 "JetBrains Mono",monospace;background:var(--soft);border-radius:5px;padding:8px 12px;max-height:150px;overflow:auto;margin-top:6px}
-.formula .new{background:var(--orange-t);border-radius:3px}
-.formula .ok{color:var(--green-d)}
-.table{margin:10px auto 0;border-collapse:separate;border-spacing:3px;font:13.5px "JetBrains Mono",monospace;direction:ltr}
+.two .t{font-size:15px;color:var(--muted);text-align:center;font-weight:600}
+.formula{direction:ltr;text-align:left;font:13px/1.9 "IBM Plex Mono",monospace;background:#fff;border:1.5px solid var(--line);border-radius:10px;padding:8px 12px;max-height:160px;overflow:auto;margin-top:6px}
+.formula .new{background:var(--orange);border-radius:3px}
+.table{margin:10px auto 0;border-collapse:separate;border-spacing:3px;font:14px "IBM Plex Mono",monospace;direction:ltr}
 .table td{padding:3px 10px;text-align:center}
-.table td.h{color:var(--muted);font-family:Rubik,sans-serif;font-size:12.5px;text-align:right}
-.table td.v{background:var(--idle);border-radius:4px;font-weight:700;transition:background .3s}
-.table td.v.cur{background:var(--orange);color:#fff}
-.table td.v.ok{background:var(--cyan);color:#fff}
+.table td.h{color:var(--muted);font-family:Assistant,sans-serif;font-size:14px;text-align:right}
+.table td.v{background:#fff;border:1px solid var(--line);border-radius:6px;font-weight:600;transition:background .3s}
+.table td.v.cur{background:var(--orange)}
+.table td.v.ok{background:var(--cyan)}
+/* queue (BFS) and stack (DFS) */
+.q{display:flex;align-items:center;justify-content:center;gap:10px;margin-top:6px}
+.q .end{font-size:14px;color:var(--muted);text-align:center;line-height:1.25;flex:none}
+.q .items{display:flex;gap:6px;direction:rtl;padding:6px;border:1.5px dashed var(--ink);border-radius:14px;min-width:120px;min-height:52px;align-items:center;justify-content:flex-start;background:#fff;flex-wrap:wrap}
+.q .items span{min-width:38px;height:38px;border-radius:50%;display:grid;place-items:center;font:600 16px "IBM Plex Mono",monospace;background:var(--cyan-t);border:1.5px solid var(--pen)}
+.q .items span.head{background:var(--orange);border-color:var(--ink)}
+.q .items em{color:var(--muted);font-style:normal;font-size:15px;padding:0 8px}
+.q .items.stack span{border-radius:10px;padding:0 10px}
+.order{text-align:center;font-size:15px;color:var(--muted);margin-top:8px}
+.order b{font:600 15px "IBM Plex Mono",monospace;color:var(--ink);direction:ltr;unicode-bidi:isolate}
 /* svg */
 svg{direction:ltr;overflow:visible}
-svg text{font-family:"JetBrains Mono",monospace}
+svg text{font-family:"IBM Plex Mono",monospace}
 .nd{transition:transform .5s ease,opacity .3s}
 .eg .lb{transition:transform .5s ease}
-.nd circle,.nd rect{fill:var(--idle);stroke:#999;stroke-width:1.6;transition:cx .5s ease,cy .5s ease,x .5s ease,y .5s ease,fill .3s,stroke .3s,opacity .3s}
-.nd text{font-size:14px;font-weight:700;fill:var(--ink);text-anchor:middle;dominant-baseline:central;transition:x .5s ease,y .5s ease,fill .3s}
-.nd text.sub{font-size:12px;fill:var(--pink)}
-.nd.vis circle,.nd.vis rect{fill:var(--cyan-t);stroke:var(--cyan);stroke-width:2.2}
-.nd.cur circle,.nd.cur rect{fill:var(--orange);stroke:var(--orange)}
-.nd.done circle,.nd.done rect{fill:var(--cyan);stroke:var(--cyan)}
-.nd.sel circle,.nd.sel rect{fill:var(--pink);stroke:var(--pink)}
-.nd.cmp circle,.nd.cmp rect{fill:var(--green);stroke:var(--green)}
-.nd.cur text:not(.sub),.nd.done text:not(.sub),.nd.sel text:not(.sub),.nd.cmp text:not(.sub){fill:#fff}
+.nd circle,.nd rect{fill:#fff;stroke:var(--ink);stroke-width:2;transition:fill .3s,stroke .3s,opacity .3s}
+.nd text{font-size:15px;font-weight:600;fill:var(--ink);text-anchor:middle;dominant-baseline:central}
+.nd text.sub{font-size:12.5px;font-weight:700;fill:var(--muted);font-family:Assistant,sans-serif;paint-order:stroke;stroke:#fff;stroke-width:5px;stroke-linejoin:round}
+.nd.vis circle,.nd.vis rect{fill:var(--cyan-t);stroke:var(--pen)}
+.nd.cur circle,.nd.cur rect{fill:var(--orange);stroke-width:2.6}
+.nd.done circle,.nd.done rect{fill:var(--done);stroke:#7d879f}
+.nd.done text:not(.sub){fill:#3b4668}
+.nd.sel circle,.nd.sel rect{fill:var(--pink);stroke-width:2.6}
+.nd.cmp circle,.nd.cmp rect{fill:var(--green);stroke-width:2.6}
 .nd.dim{opacity:.3}
-.nd.S circle{fill:var(--cyan);stroke:var(--cyan)}.nd.S text:not(.sub){fill:#fff}
-.nd.T circle{fill:var(--pink-t);stroke:var(--pink)}
+.nd.S circle{fill:var(--cyan)}
+.nd.T circle{fill:var(--pink-t)}
 .eg path{stroke:var(--gray);stroke-width:2;fill:none;stroke-linecap:round;transition:d .5s ease,stroke .3s,stroke-width .3s,opacity .3s}
-.eg .lb rect{fill:#fff;stroke:#ddd;stroke-width:1;transition:x .5s,y .5s}
-.eg .lb text{font-size:11.5px;font-weight:700;fill:#555;text-anchor:middle;dominant-baseline:central;transition:x .5s,y .5s}
-.eg.tree path,.eg.flow path{stroke:var(--cyan);stroke-width:3.6}
-.eg.match path{stroke:var(--green);stroke-width:4.4}
-.eg.cand path{stroke:var(--green);stroke-width:2.4;stroke-dasharray:6 5}
-.eg.cur path,.eg.path path{stroke:var(--orange);stroke-width:4.2}
-.eg.cut path{stroke:var(--pink);stroke-width:3.4;stroke-dasharray:8 5}
-.eg.dim{opacity:.2}
-.eg.tree .lb text,.eg.flow .lb text{fill:#127f91}
-.eg.cur .lb rect,.eg.path .lb rect{fill:var(--orange);stroke:var(--orange)}.eg.cur .lb text,.eg.path .lb text{fill:#fff}
+.eg .lb rect{fill:#fff;stroke:var(--line);stroke-width:1}
+.eg .lb text{font-size:12px;font-weight:600;fill:var(--muted);text-anchor:middle;dominant-baseline:central}
+.eg.tree path,.eg.flow path{stroke:var(--pen);stroke-width:4}
+.eg.match path{stroke:var(--green-d);stroke-width:4.5}
+.eg.cand path{stroke:var(--green-d);stroke-width:2.6;stroke-dasharray:6 6}
+.eg.cur path,.eg.path path{stroke:var(--mag);stroke-width:4.5}
+.eg.cut path{stroke:var(--mag);stroke-width:3.4;stroke-dasharray:9 6}
+.eg.dim{opacity:.22}
+.eg.tree .lb text,.eg.flow .lb text{fill:var(--pen)}
+.eg.cur .lb rect,.eg.path .lb rect{fill:var(--pink);stroke:var(--ink)}.eg.cur .lb text,.eg.path .lb text{fill:var(--ink)}
 .eg.match .lb text{fill:var(--green-d)}
 .fade{animation:fade .35s ease}
 @keyframes fade{from{opacity:0}to{opacity:1}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 @media (max-width:1100px){.stage{grid-template-columns:1fr}.code{max-height:none}}
 @media (max-width:760px){
-  #menuBtn{display:block}
+  #menuBtn{display:block;position:relative;z-index:40}
+  body.navopen #menuBtn{background:var(--ink);color:#fff}
   header h1 span{display:none}
-  nav{position:fixed;top:0;bottom:0;right:0;z-index:30;box-shadow:-10px 0 30px rgba(0,0,0,.2);display:none;padding-top:58px;width:min(290px,85vw)}
-  #menuBtn{position:relative;z-index:40}
-  body.navopen #menuBtn{background:var(--ink)}
+  nav{position:fixed;top:0;bottom:0;right:0;z-index:30;box-shadow:-10px 0 30px rgba(29,43,83,.2);display:none;padding-top:66px;width:min(300px,86vw)}
   nav.open{display:block}
   #backdrop.open{display:block}
   .two{grid-template-columns:1fr}
+  .q{flex-wrap:wrap;justify-content:space-between}.q .items{flex-basis:100%;order:-1}
+  .q .items.stack span{padding:0 6px;font-size:14px}
   .speed{display:none}
-  .cell{width:36px}.box{height:38px;font-size:14px}
+  .ib .lbl{display:none}
+  .ib.play{min-width:64px}
+  .cell{width:38px}.box{height:40px;font-size:15px}
   .viz{min-height:240px}
+  .board{box-shadow:3px 3px 0 var(--ink)}
 }
 </style>
 </head>
 <body>
 <header>
   <button id="menuBtn" aria-label="תפריט">☰</button>
-  <h1><a href="#" id="homeLink" title="למסך הבית">הנפשות <span>· יסודות האלגוריתמים והסיבוכיות</span></a></h1>
+  <h1><a href="#" id="homeLink" title="למסך הבית"><b>הנפשות</b><span>יסודות האלגוריתמים והסיבוכיות</span></a></h1>
   <div class="search">
-    <span class="ic">⌕</span>
-    <input id="q" type="search" placeholder="חפשו בחומר: למשל ״מסלול קצר״, ״ערימה״, ״רדוקציה״" autocomplete="off" aria-label="חיפוש בחומר הקורס">
+    <span class="ic" aria-hidden="true">⌕</span>
+    <input id="q" type="search" placeholder="מה רוצים להבין? למשל ״מסלול קצר״ או ״ערימה״" autocomplete="off" aria-label="חיפוש בחומר הקורס">
     <div class="results" id="results"></div>
   </div>
 </header>
@@ -235,8 +263,8 @@ svg text{font-family:"JetBrains Mono",monospace}
   <nav id="nav"></nav>
   <main id="main">
     <div id="welcome">
-      <h2>כל האלגוריתמים של הקורס, בתנועה</h2>
-      <p>בחרו אלגוריתם וראו אותו רץ צעד אחר צעד, על הדוגמה מההרצאה או על קלט משלכם. אפשר גם לחפש למעלה.</p>
+      <h2>רואים את האלגוריתם עובד, צעד אחרי צעד</h2>
+      <p>בוחרים נושא מהקורס, ולוחצים "הבא" כדי לראות כל צעד של האלגוריתם, על הדוגמה מההרצאה או על דוגמה משלכם.</p>
       <div class="tiles" id="tiles"></div>
     </div>
     <div id="algo" hidden>
@@ -252,12 +280,12 @@ svg text{font-family:"JetBrains Mono",monospace}
         <div class="board">
           <div class="viz" id="viz"></div>
           <div class="legend" id="legend"></div>
-          <div class="caption"><span class="n" id="count"></span><div id="msg"></div></div>
+          <div class="caption"><span class="n" id="count"></span><div id="msg" aria-live="polite"></div></div>
           <div class="transport">
-            <button class="ib" id="bFirst" aria-label="להתחלה" title="להתחלה"><svg viewBox="0 0 24 24"><path d="M17.5 5H20v14h-2.5zM3 5v14l7-7zM10 5v14l7-7z"/></svg></button>
-            <button class="ib" id="bPrev" aria-label="צעד קודם" title="צעד קודם (→)"><svg viewBox="0 0 24 24"><path d="M5 5v14l11-7zM17 5h2.5v14H17z" opacity=".95"/></svg></button>
-            <button class="ib play" id="bPlay" aria-label="הפעלה" title="הפעלה / עצירה (רווח)"><svg viewBox="0 0 24 24" id="playIcon"><path d="M7 5v14l11-7z"/></svg></button>
-            <button class="ib" id="bNext" aria-label="צעד הבא" title="צעד הבא (←)"><svg viewBox="0 0 24 24"><path d="M19 5v14L8 12zM4.5 5H7v14H4.5z"/></svg></button>
+            <button class="ib" id="bFirst" aria-label="חזרה להתחלה" title="חזרה להתחלה"><svg viewBox="0 0 24 24"><path d="M17.5 5H20v14h-2.5zM3 5v14l7-7zM10 5v14l7-7z"/></svg></button>
+            <button class="ib" id="bPrev" aria-label="הצעד הקודם" title="הצעד הקודם (חץ ימינה)"><svg viewBox="0 0 24 24"><path d="M7 5v14l11-7z"/></svg><span class="lbl">הקודם</span></button>
+            <button class="ib play" id="bPlay" aria-label="הפעלה" title="הפעלה / עצירה (רווח)"><svg viewBox="0 0 24 24" id="playIcon"><path d="M7 5v14l11-7z"/></svg><span class="lbl" id="playLbl">הפעלה</span></button>
+            <button class="ib" id="bNext" aria-label="הצעד הבא" title="הצעד הבא (חץ שמאלה)"><span class="lbl">הבא</span><svg viewBox="0 0 24 24"><path d="M17 5v14L6 12z"/></svg></button>
             <input type="range" class="scrub" id="scrub" min="0" max="0" value="0" aria-label="מיקום בהנפשה">
             <label class="speed">מהירות<input type="range" id="speed" min="0" max="100" value="45"></label>
           </div>
@@ -359,13 +387,13 @@ function arrRow({ label, vals, base = 0, hl = {}, ptr = {}, idxShow = true, empt
   });
   return h + "</div></div>";
 }
-const LEG = { cur: "var(--orange)", cmp: "var(--green)", done: "var(--cyan)", ok: "var(--cyan)", sel: "var(--pink)", vis: "var(--cyan-t);box-shadow:inset 0 0 0 2px var(--cyan)", S: "var(--cyan)", T: "var(--pink-t);box-shadow:inset 0 0 0 2px var(--pink)" };
-const LEGE = { tree: ["var(--cyan)", 0], flow: ["var(--cyan)", 0], path: ["var(--orange)", 0], cur: ["var(--orange)", 0], match: ["var(--green)", 0], cand: ["var(--green)", 1], cut: ["var(--pink)", 1] };
+const LEG = { cur: "var(--orange)", cmp: "var(--green)", done: "var(--done)", ok: "var(--cyan)", sel: "var(--pink)", vis: "var(--cyan-t);border-color:var(--pen)", S: "var(--cyan)", T: "var(--pink-t)" };
+const LEGE = { tree: ["var(--pen)", 0], flow: ["var(--pen)", 0], path: ["var(--mag)", 0], cur: ["var(--mag)", 0], match: ["var(--green-d)", 0], cand: ["var(--green-d)", 1], cut: ["var(--mag)", 1] };
 function legend(items) {
   return items.map(([k, t]) => k.startsWith("e:") ? `<span><i class="e ${LEGE[k.slice(2)][1] ? "dash" : ""}" style="border-color:${LEGE[k.slice(2)][0]}"></i>${t}</span>` : `<span><i style="background:${LEG[k]}"></i>${t}</span>`).join("");
 }
 const R = 20;
-const MARK = { idle: "#bbb", tree: "#2ebbd1", flow: "#2ebbd1", cand: "#52bc69", cur: "#ff8a27", path: "#ff8a27", match: "#52bc69", cut: "#e64980", dim: "#bbb" };
+const MARK = { idle: "#b9c1d1", tree: "#2f5bd3", flow: "#2f5bd3", cand: "#1f7a54", cur: "#d6336c", path: "#d6336c", match: "#1f7a54", cut: "#d6336c", dim: "#b9c1d1" };
 function svgOpen(w, h) {
   return `<svg data-k="svg" viewBox="0 0 ${w} ${h}" style="max-width:${Math.round(w * 1.25)}px" xmlns="http://www.w3.org/2000/svg"><defs>` +
     Object.entries(MARK).map(([k, col]) => `<marker id="ar-${k}" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="${col}"/></marker>`).join("") + `</defs>`;
@@ -478,7 +506,7 @@ function topic(num, name) { TOPICS.push({ num, name }); }
 function algo(def) { ALGOS.push(def); }
 let cur = null, steps = [], idx = 0, timer = null, runId = 0, shownRun = -1, OPT = {};
 const $ = id => document.getElementById(id);
-const TILE = ["var(--orange)", "var(--green)", "var(--cyan)", "var(--pink)"];
+const TILE = [["var(--orange)","var(--orange-t)"],["var(--green)","var(--green-t)"],["var(--cyan)","var(--cyan-t)"],["var(--pink)","var(--pink-t)"]];
 
 function buildNav() {
   const nav = $("nav"), tiles = $("tiles");
@@ -490,8 +518,8 @@ function buildNav() {
       const b = document.createElement("button"); b.textContent = a.name; b.dataset.id = a.id;
       b.onclick = () => go2(a.id); nav.appendChild(b);
     }
-    const tb = document.createElement("button"); tb.style.background = TILE[ti % 4];
-    tb.innerHTML = `${esc(t.name)}<small>${list.length === 1 ? "הנפשה אחת" : list.length + " הנפשות"}</small>`; tb.onclick = () => go2(list[0].id); tiles.appendChild(tb);
+    const tb = document.createElement("button"); tb.style.background = TILE[ti % 4][1];
+    tb.innerHTML = `<i style="background:${TILE[ti % 4][0]}"></i>${esc(t.name)}<small>${list.length === 1 ? "הנפשה אחת" : list.length + " הנפשות"}</small>`; tb.onclick = () => go2(list[0].id); tiles.appendChild(tb);
   });
 }
 function goHome() {
@@ -593,11 +621,11 @@ const PLAY = '<path d="M7 5v14l11-7z"/>', PAUSE = '<path d="M7 5h4v14H7zM13 5h4v
 function play() {
   if (timer) return stop();
   if (idx === steps.length - 1) { idx = 0; show(); }
-  $("playIcon").innerHTML = PAUSE;
+  $("playIcon").innerHTML = PAUSE; const pl = $("playLbl"); if (pl) pl.textContent = "עצירה";
   const tick = () => { if (!step(1)) return stop(); timer = setTimeout(tick, delay()); };
   timer = setTimeout(tick, Math.min(500, delay()));
 }
-function stop() { clearTimeout(timer); timer = null; const p = $("playIcon"); if (p) p.innerHTML = PLAY; }
+function stop() { clearTimeout(timer); timer = null; const p = $("playIcon"); if (p) p.innerHTML = PLAY; const pl = $("playLbl"); if (pl) pl.textContent = "הפעלה"; }
 
 /* ================== search (free, runs in the page) ================== */
 const HE_PREFIX = /^(ו|ה|ב|ל|מ|ש|כ|וה|וב|ול|ומ|שה|שב|של|בה|לה|מה|כש)(?=[֐-׿]{3,})/;
@@ -956,7 +984,7 @@ algo({
     const CW = 46, RH = 62, maxD = Math.max(...st.nodes.map(x => x.d));
     const w = n * CW + 10, h = (maxD + 1) * RH + 10;
     let s = `<div data-k="mstree" style="position:relative;width:${w}px;height:${h}px;margin:0 auto;direction:ltr">`;
-    const col = { cur: ["--orange", "#fff"], wait: ["--cyan-t", "inherit"], done: ["--cyan", "#fff"] };
+    const col = { cur: ["--orange", "var(--ink)"], wait: ["--cyan-t", "inherit"], done: ["--cyan", "var(--ink)"] };
     for (const nd of st.nodes) {
       const [bg, fg] = col[nd.st];
       s += `<div data-k="ms${nd.l}-${nd.r}" style="position:absolute;left:${nd.l * CW + 5}px;top:${nd.d * RH + 4}px;width:${(nd.r - nd.l + 1) * CW - 6}px;height:${RH - 20}px;background:var(${bg});color:${fg};border-radius:4px;transition:background .3s,color .3s;font-family:JetBrains Mono,monospace;display:flex;align-items:center;justify-content:space-around;font-weight:600;font-size:14px">${nd.vals.map(v => `<span>${esc(v)}</span>`).join("")}</div>`;
@@ -1446,91 +1474,116 @@ function gParse(i, opt) {
   if (i.s !== undefined) { const s = String(i.s).trim(); if (!g.nodes.includes(s)) throw `הצומת "${esc(s)}" לא מופיע בגרף.`; out.s = s; }
   return out;
 }
+/* an edge drawn straight through another vertex is misleading: curve it away */
+function avoidBend(pos, u, v, nodes) {
+  const a = pos[u], b = pos[v], dx = b.x - a.x, dy = b.y - a.y, L = Math.hypot(dx, dy) || 1, nx = -dy / L, ny = dx / L;
+  for (const w of nodes) {
+    if (w === u || w === v) continue;
+    const p = pos[w], t = ((p.x - a.x) * dx + (p.y - a.y) * dy) / (L * L);
+    if (t < 0.05 || t > 0.95) continue;
+    const off = (p.x - a.x) * nx + (p.y - a.y) * ny;
+    if (Math.abs(off) < R + 12) return (off > 0 ? -1 : 1) * 36;
+  }
+  return 0;
+}
 function gDraw(g, pos, nodeCls = {}, edgeCls = {}, { directed = false, sub = {}, edgeLabel = null } = {}) {
   const nodes = g.nodes.map(id => ({ id, x: pos[id].x, y: pos[id].y, cls: nodeCls[id] || "", sub: sub[id] }));
-  const edges = g.edges.map(e => ({ u: e.u, v: e.v, dir: directed, bend: directed && g.edges.some(f => f.u === e.v && f.v === e.u) ? 22 : 0, cls: edgeCls[edgeKey(e.u, e.v, directed)] || "", label: edgeLabel ? edgeLabel(e) : (e.w !== null ? e.w : "") }));
+  const edges = g.edges.map(e => ({ u: e.u, v: e.v, dir: directed, bend: directed && g.edges.some(f => f.u === e.v && f.v === e.u) ? 22 : avoidBend(pos, e.u, e.v, g.nodes), cls: edgeCls[edgeKey(e.u, e.v, directed)] || "", label: edgeLabel ? edgeLabel(e) : (e.w !== null ? e.w : "") }));
   return drawGraph({ nodes, edges, h: 340 });
 }
 
 /* ---------- 06: BFS ---------- */
+const L6 = "1-2\n1-3\n1-4\n1-7\n2-3\n2-5\n2-6\n3-4\n3-6\n3-9\n4-6\n4-7\n5-6\n5-8\n6-9\n8-9";
+function qHtml(items, { stack = false, title, headLbl, tailLbl } = {}) {
+  const sp = items.map((v, k) => `<span class="${k === 0 && !stack ? "head" : ""}${k === items.length - 1 && stack ? "head" : ""}">${esc(v)}</span>`).join("") || "<em>ריקה</em>";
+  return `<div class="sublabel" style="margin-top:12px;font-weight:600;color:var(--ink)">${title}</div><div class="q"><span class="end">${headLbl}</span><div class="items${stack ? " stack" : ""}">${sp}</div><span class="end">${tailLbl}</span></div>`;
+}
 algo({
   id: "bfs", topic: "06", name: "סריקה לרוחב (BFS)",
-  tag: "סורקים שכבה אחרי שכבה, בעזרת תור.", kw: "bfs סריקה לרוחב חיפוש תור גרף", src: "הרצאה 6, שקף 19",
-  intro: `<b>מה זה?</b> סריקה של כל הצמתים שאפשר להגיע אליהם מצומת ${c("s")}, <b>שכבה אחרי שכבה</b>: קודם ${c("s")}, אחר כך כל השכנים שלו, אחר כך השכנים של השכנים, וכן הלאה. מחזיקים רשימה ${c("L")} (תור): מוציאים מהראש ומוסיפים לסוף. כך הצמתים הקרובים יוצאים לפני הרחוקים.<br><b>זמן ריצה:</b> ${c("O(n + m)")}. השכנים נבדקים מהמספר הקטן לגדול.`,
+  tag: "סורקים שכבה אחרי שכבה, בעזרת תור.", kw: "bfs סריקה לרוחב חיפוש תור גרף שכבות", src: "הרצאה 6, שקף 19",
+  intro: `<b>מה זה?</b> דרך לעבור על כל הצמתים שאפשר להגיע אליהם מצומת ${c("s")}, <b>שכבה אחרי שכבה</b>: קודם ${c("s")} (שכבה 0), אחר כך כל השכנים שלו (שכבה 1), אחר כך השכנים שלהם (שכבה 2), וכן הלאה.<br><b>איך?</b> מחזיקים תור ${c("L")}: מי שנכנס ראשון יוצא ראשון. בכל צעד מוציאים את הצומת שבראש התור, ומכניסים לסוף התור את כל השכנים שלו שעוד לא ראינו.<br><b>בציור:</b> המספר הקטן מעל כל צומת הוא השכבה שלו. <b>זמן ריצה:</b> ${c("O(n + m)")}.`,
   code: ["BFS(G=(V,E), s)", "  Initially, all vertices in V are \"not visited\".", "  Create empty list L.", "  Add s to the tail of L, and mark s as \"visited\".", "  While L ≠ ∅ Do", "    Let i be the head of L, and remove i from L.", "    For each j ∈ N(i) do", "      If j \"not visited\" Then", "        Mark j as \"visited\"", "        Add j to the tail of L.", "      End If", "    End For.", "  End While."],
-  legend: [["cur","i"],["cmp","j – השכן שבודקים"],["vis","ב-L"],["done","סיימנו"],["e:tree","עץ BFS"]],
+  legend: [["cur","i – יצא עכשיו מהתור"],["cmp","j – שכן חדש שנכנס לתור"],["vis","מחכה בתור"],["done","סיימנו איתו"],["e:tree","קשת שבה גילינו צומת"]],
   opts: [ORD],
-  inputs: gInputs("1-2\n1-3\n1-4\n1-7\n2-3\n2-5\n2-6\n3-4\n3-6\n3-9\n4-6\n4-7\n5-6\n5-8\n6-9\n8-9"),
+  inputs: gInputs(L6),
   parse(i) { return gParse(i, {}); },
   run(input) {
     const { g, s } = input, Nb = i => input.__opt.ord === "desc" ? neighbors(g, i).reverse() : neighbors(g, i);
-    const pos = gPos(g, s, input, PRE.l6), S = [], vis = new Set(), done = new Set(), L = [], tree = {}, order = [];
+    const pos = gPos(g, s, input, PRE.l6), S = [], vis = new Set(), done = new Set(), L = [], tree = {}, order = [], lay = {};
     const snap = (line, msg, x = {}) => {
       const nc = {}; vis.forEach(v => nc[v] = "vis"); done.forEach(v => nc[v] = "done");
-      if (x.i) nc[x.i] = "cur"; if (x.j) nc[x.j] = "cmp";
-      const ec = { ...tree }; if (x.i && x.j) ec[edgeKey(x.i, x.j)] = tree[edgeKey(x.i, x.j)] ? "tree" : "cur";
-      S.push({ line, msg, g, pos, nc, ec, L: L.slice(), order: order.slice(), vars: [["i", x.i || "–"], ["j", x.j || "–"]] });
+      if (x.i) nc[x.i] = "cur"; (x.js || []).forEach(j => nc[j] = "cmp");
+      const ec = { ...tree }; (x.js || []).forEach(j => ec[edgeKey(x.i, j)] = "path");
+      const sub = {}; for (const v in lay) sub[v] = "שכבה " + lay[v];
+      S.push({ line, msg, g, pos, nc, ec, sub, L: L.slice(), order: order.slice(), vars: [["i", x.i || "–"], ["L", L.join(", ") || "∅"]] });
     };
-    snap([1, 2], `כל הצמתים "not visited", והרשימה ${c("L")} ריקה.`);
-    L.push(s); vis.add(s);
-    snap(3, `מוסיפים את ${c(s)} ל-${c("L")} ומסמנים אותו "visited".`);
+    snap([1, 2], `בהתחלה אף צומת לא "visited", והתור ${c("L")} ריק.`);
+    L.push(s); vis.add(s); lay[s] = 0;
+    snap(3, `מכניסים את ${c(s)} לתור ומסמנים אותו "visited". הוא שכבה 0.`);
     while (L.length) {
       const i = L.shift(); order.push(i);
-      snap(5, `מוציאים את ${c(i)} מראש הרשימה. עכשיו בודקים את השכנים שלו: ${c(Nb(i).join(", "))}.`, { i });
-      for (const j of Nb(i)) {
-        if (!vis.has(j)) {
-          vis.add(j); L.push(j); tree[edgeKey(i, j)] = "tree";
-          snap([7, 8, 9], `${c(j)} עוד לא ביקרנו בו, אז מסמנים אותו "visited" ומוסיפים לסוף ${c("L")}.`, { i, j });
-        } else snap(7, `${c(j)} כבר "visited", אז מדלגים עליו.`, { i, j });
-      }
+      const all = Nb(i), fresh = all.filter(j => !vis.has(j)), old = all.filter(j => vis.has(j));
+      snap(5, `מוציאים את ${c(i)} מראש התור. השכנים שלו: ${c(all.join(", ") || "אין")}.`, { i });
+      fresh.forEach(j => { vis.add(j); L.push(j); tree[edgeKey(i, j)] = "tree"; lay[j] = lay[i] + 1; });
+      const oldTxt = old.length ? ` ${c(old.join(", "))} ${old.length > 1 ? "כבר סומנו" : "כבר סומן"} קודם, אז מדלגים ${old.length > 1 ? "עליהם" : "עליו"}.` : "";
+      if (fresh.length) snap([6, 7, 8, 9], `שכנים חדשים של ${c(i)}: ${c(fresh.join(", "))}. מסמנים אותם ומכניסים לסוף התור. הם בשכבה ${lay[i] + 1}.${oldTxt}`, { i, js: fresh });
+      else snap([6, 7], `לכל השכנים של ${c(i)} כבר הגענו קודם, אז אין מה להכניס לתור.`, { i });
       done.add(i);
     }
-    snap(12, `${c("L")} ריקה, והסריקה הסתיימה. <b>סדר הביקור: ${c(order.join(", "))}.</b> הקשתות בתכלת יוצרות את עץ ה-BFS.${vis.size < g.nodes.length ? ` הצמתים ${c(g.nodes.filter(v => !vis.has(v)).join(", "))} לא נסרקו, כי אין אליהם מסלול מ-${s}.` : ""}`);
+    const miss = g.nodes.filter(v => !vis.has(v));
+    snap(12, `התור ריק, והסריקה הסתיימה. <b>סדר היציאה מהתור: ${c(order.join(", "))}.</b> הקשתות הכחולות הן עץ ה-BFS, והשכבה של כל צומת היא המרחק שלו מ-${c(s)}.${miss.length ? ` לצמתים ${c(miss.join(", "))} לא הגענו, כי אין אליהם מסלול מ-${c(s)}.` : ""}`);
     return S;
   },
   render(st) {
-    return gDraw(st.g, st.pos, st.nc, st.ec) + `<div style="margin-top:6px"><div style="font-size:13px;color:var(--muted)">הרשימה L (ראש ← סוף):</div><div class="listbox">${st.L.map(v => `<span>${esc(v)}</span>`).join("") || "<em>ריקה</em>"}</div><div style="font-size:13px;color:var(--muted);margin-top:6px">סדר ההוצאה מ-L: <span class="ltr">${st.order.join(", ")}</span></div></div>`;
+    return gDraw(st.g, st.pos, st.nc, st.ec, { sub: st.sub }) + qHtml(st.L, { title: "התור L", headLbl: "ראש התור<br><small>יוצאים מכאן</small>", tailLbl: "סוף התור<br><small>נכנסים מכאן</small>" }) +
+      `<div class="order">סדר היציאה מהתור: <b>${st.order.join(", ") || "–"}</b></div>`;
   },
 });
 
 /* ---------- 06: DFS ---------- */
 algo({
   id: "dfs", topic: "06", name: "סריקה לעומק (DFS)",
-  tag: "הולכים כמה שיותר עמוק, וחוזרים אחורה כשנתקעים.", kw: "dfs סריקה לעומק חיפוש רקורסיה גרף", src: "הרצאה 6, שקף 19",
-  intro: `<b>מה זה?</b> סריקה שהולכת <b>כמה שיותר עמוק</b> לפני שהיא חוזרת אחורה. מצומת ${c("i")} עוברים לשכן הראשון שעוד לא ביקרנו בו, ממנו לשכן שלו, וכן הלאה. כשנתקעים, הקריאה הרקורסיבית מסתיימת וחוזרים צעד אחורה.<br><b>זמן ריצה:</b> ${c("O(n + m)")}. השכנים נבדקים מהמספר הקטן לגדול.`,
+  tag: "הולכים כמה שיותר עמוק, וחוזרים אחורה כשנתקעים.", kw: "dfs סריקה לעומק חיפוש רקורסיה גרף מחסנית", src: "הרצאה 6, שקף 19",
+  intro: `<b>מה זה?</b> דרך לעבור על כל הצמתים שאפשר להגיע אליהם, שבה הולכים <b>כמה שיותר עמוק</b> לפני שחוזרים: מהצומת הנוכחי קופצים מיד לשכן הראשון שעוד לא ראינו, ממנו לשכן שלו, וכן הלאה.<br><b>מה קורה כשנתקעים?</b> כשלצומת אין שכנים חדשים, הקריאה שלו מסתיימת וחוזרים לצומת שממנו הגענו אליו. את הדרך חזרה רואים ב"מחסנית" שמתחת לגרף.<br><b>בציור:</b> המספר הקטן מעל כל צומת הוא מתי הגענו אליו (1 = ראשון). <b>זמן ריצה:</b> ${c("O(n + m)")}.`,
   code: ["DFS(G=(V,E), i)", "  Mark i as \"visited\".", "  For each j ∈ N(i) do", "    If j \"not visited\" Then DFS(G,j).", "  End For"],
-  legend: [["cur","הקריאה שרצה"],["cmp","השכן שבודקים"],["vis","במחסנית"],["done","הסתיים"],["e:tree","עץ DFS"]],
+  legend: [["cur","הצומת שאנחנו בו עכשיו"],["vis","בדרך (מחכה שנחזור אליו)"],["done","סיימנו איתו"],["e:path","הדרך מההתחלה עד כאן"],["e:tree","עץ DFS"]],
   opts: [ORD],
-  inputs: gInputs("1-2\n1-3\n1-4\n1-7\n2-3\n2-5\n2-6\n3-4\n3-6\n3-9\n4-6\n4-7\n5-6\n5-8\n6-9\n8-9"),
+  inputs: gInputs(L6),
   parse(i) { return gParse(i, {}); },
   run(input) {
     const { g, s } = input, Nb = i => input.__opt.ord === "desc" ? neighbors(g, i).reverse() : neighbors(g, i);
-    const pos = gPos(g, s, input, PRE.l6), S = [], vis = new Set(), done = new Set(), stack = [], tree = {}, order = [];
+    const pos = gPos(g, s, input, PRE.l6), S = [], vis = new Set(), done = new Set(), stack = [], tree = {}, order = [], num = {};
     const snap = (line, msg, x = {}) => {
       const nc = {}; vis.forEach(v => nc[v] = "vis"); done.forEach(v => nc[v] = "done");
-      const top = stack[stack.length - 1]; if (top) nc[top] = "cur"; if (x.j) nc[x.j] = "cmp";
-      const ec = { ...tree }; if (top && x.j && !tree[edgeKey(top, x.j)]) ec[edgeKey(top, x.j)] = "cur";
-      S.push({ line, msg, g, pos, nc, ec, stack: stack.slice(), order: order.slice(), vars: [["i", top || "–"], ["j", x.j || "–"]] });
+      const top = stack[stack.length - 1]; if (top) nc[top] = "cur";
+      if (x.back) nc[x.back] = "done";
+      const ec = { ...tree }; for (let k = 1; k < stack.length; k++) ec[edgeKey(stack[k - 1], stack[k])] = "path";
+      const sub = {}; for (const v in num) sub[v] = "#" + num[v];
+      S.push({ line, msg, g, pos, nc, ec, sub, stack: stack.slice(), order: order.slice(), vars: [["i", top || "–"]] });
     };
-    (function dfs(i) {
-      stack.push(i); vis.add(i); order.push(i);
-      snap([0, 1], `${c(`DFS(G, ${i})`)}: מסמנים את ${c(i)} כ-"visited".`);
-      for (const j of Nb(i)) {
-        if (!vis.has(j)) {
-          tree[edgeKey(i, j)] = "tree";
-          snap(3, `${c(j)} עוד לא ביקרנו בו, אז נכנסים אליו מיד, לפני שבודקים את שאר השכנים של ${i}.`, { j });
-          dfs(j);
-          snap(2, `חזרנו ל-${c(i)} וממשיכים לשכנים הבאים שלו.`);
-        } else snap(3, `${c(j)} כבר "visited", אז מדלגים עליו.`, { j });
+    (function dfs(i, from) {
+      stack.push(i); vis.add(i); order.push(i); num[i] = order.length;
+      const all = Nb(i), old = all.filter(j => vis.has(j) && j !== from);
+      snap([0, 1], from ? `הגענו מ-${c(from)} ל-${c(i)} ומסמנים אותו "visited". הוא הצומת ה-${num[i]} שגילינו.` : `מתחילים ב-${c(`DFS(G, ${i})`)}: מסמנים את ${c(i)} כ-"visited".`);
+      let first = true;
+      for (const j of all) {
+        if (vis.has(j)) continue;
+        tree[edgeKey(i, j)] = "tree";
+        if (!first) snap(2, `חזרנו ל-${c(i)}. השכן הבא שלו שעוד לא ראינו הוא ${c(j)}, אז הולכים אליו.`);
+        first = false;
+        dfs(j, i);
       }
-      done.add(i); stack.pop();
-      snap(4, `סיימנו לעבור על כל השכנים של ${c(i)}, והקריאה ${c(`DFS(G, ${i})`)} מסתיימת.${stack.length ? ` חוזרים ל-${c(stack[stack.length - 1])}.` : ""}`);
-    })(s);
-    snap(-1, `<b>הסריקה הסתיימה. סדר הביקור: ${c(order.join(", "))}.</b> הקשתות בתכלת יוצרות את עץ ה-DFS.${vis.size < g.nodes.length ? ` הצמתים ${c(g.nodes.filter(v => !vis.has(v)).join(", "))} לא נסרקו, כי אין אליהם מסלול מ-${s}.` : ""}`);
+      stack.pop(); done.add(i);
+      const skip = old.length && first ? ` (השכנים ${c(old.join(", "))} כבר סומנו)` : "";
+      snap(4, `ל-${c(i)} אין עוד שכנים חדשים${skip}, אז הקריאה ${c(`DFS(G, ${i})`)} מסתיימת${stack.length ? ` <b>וחוזרים אחורה ל-${c(stack[stack.length - 1])}</b>` : ""}.`, { back: i });
+    })(s, null);
+    const miss = g.nodes.filter(v => !vis.has(v));
+    snap(-1, `<b>הסריקה הסתיימה. סדר הגילוי: ${c(order.join(", "))}.</b> הקשתות הכחולות הן עץ ה-DFS.${miss.length ? ` לצמתים ${c(miss.join(", "))} לא הגענו, כי אין אליהם מסלול מ-${c(s)}.` : ""}`);
     return S;
   },
   render(st) {
-    return gDraw(st.g, st.pos, st.nc, st.ec) + `<div style="margin-top:6px"><div style="font-size:13px;color:var(--muted)">מחסנית הרקורסיה (מהקריאה הראשונה לנוכחית):</div><div class="listbox">${st.stack.map(v => `<span>DFS(${esc(v)})</span>`).join("") || "<em>ריקה</em>"}</div><div style="font-size:13px;color:var(--muted);margin-top:6px">סדר הביקור: <span class="ltr">${st.order.join(", ")}</span></div></div>`;
+    return gDraw(st.g, st.pos, st.nc, st.ec, { sub: st.sub }) + qHtml(st.stack.map(v => `DFS(${v})`), { stack: true, title: "המחסנית: הדרך שלנו מההתחלה עד הצומת הנוכחי", headLbl: "הקריאה הראשונה", tailLbl: "אנחנו כאן" }) +
+      `<div class="order">סדר הגילוי: <b>${st.order.join(", ") || "–"}</b></div>`;
   },
 });
 
@@ -1874,7 +1927,7 @@ algo({
       for (let p = 1; p <= st.k; p++) {
         const key = `x(${v},${p})`, val = st.assign ? (st.assign[key] ? 1 : 0) : "";
         const on = st.hlGrid === "all" || st.hlCol === p || (st.hlRows || []).includes(v);
-        grid += `<td style="border:1px solid var(--line);width:58px;height:30px;text-align:center;font-size:11.5px;background:${val === 1 ? "var(--green-soft)" : on ? "var(--amber-soft)" : "#fff"};font-weight:${val === 1 ? 700 : 400}">${key}${val !== "" ? ` = ${val}` : ""}</td>`;
+        grid += `<td style="border:1px solid var(--line);width:58px;height:30px;text-align:center;font-size:11.5px;background:${val === 1 ? "var(--green-t)" : on ? "var(--orange-t)" : "#fff"};font-weight:${val === 1 ? 700 : 400}">${key}${val !== "" ? ` = ${val}` : ""}</td>`;
       }
       grid += "</tr>";
     }
@@ -2091,7 +2144,7 @@ algoBefore("sat2vc", {
     const outs = st.out.map((o, i) => {
       const sat = st.val ? o.lits.some(l => litV(l, st.val)) : false;
       const bg = i === st.newIdx ? "var(--orange)" : sat ? "var(--green)" : (st.cur === o.src ? "var(--pink)" : "var(--idle)");
-      const fg = bg === "var(--idle)" ? "var(--ink)" : "#fff";
+      const fg = "var(--ink)";
       return `<span data-k="n${i}" style="background:${bg};color:${fg}">(${o.lits.map(l => esc(l)).join(" ∨ ")})</span>`;
     }).join("");
     const vals = st.val ? `<div class="chips" data-k="vals" style="justify-content:center;margin-top:12px">${Object.entries(st.val).map(([k, v]) => `<span class="chip"><span>${esc(k)}</span><b>${v}</b></span>`).join("")}</div>` : "";
@@ -2176,7 +2229,7 @@ algo({
     const hlN = new Set(st.hlN || []), pN = new Set(st.pathN || []), hlE = new Set(st.hlE || []), pE = new Set(st.pathE || []);
     const nodes = st.shown.map(id => { const nd = st.N[id]; return { id, x: nd.x, y: nd.y, label: nd.label, r: nd.r, cls: pN.has(id) ? (id[0] === "C" ? "sel" : "cur") : hlN.has(id) ? "cur" : id[0] === "C" ? "vis" : "" }; });
     const edges = st.E.map(e => ({ u: e.u, v: e.v, key: e.key, dir: true, bend: e.bend || (e.t === "var" ? 9 : 0), cls: pE.has(e.key) ? "path" : hlE.has(e.key) ? "cur" : (st.pathE ? "dim" : "") }));
-    const side = `<div class="listbox" data-k="cl" style="margin-top:8px">${st.clauses.map((cl, j) => `<span data-k="q${j}" style="background:${st.shown.includes("C" + j) ? "var(--pink)" : "var(--idle)"};color:${st.shown.includes("C" + j) ? "#fff" : "var(--muted)"}">C${j + 1} = (${esc(cl.map(litS).join(" ∨ "))})</span>`).join("")}</div>`;
+    const side = `<div class="listbox" data-k="cl" style="margin-top:8px">${st.clauses.map((cl, j) => `<span data-k="q${j}" style="background:${st.shown.includes("C" + j) ? "var(--pink)" : "var(--idle)"};color:${st.shown.includes("C" + j) ? "var(--ink)" : "var(--muted)"}">C${j + 1} = (${esc(cl.map(litS).join(" ∨ "))})</span>`).join("")}</div>`;
     return drawGraph({ w: st.W, h: st.H, nodes, edges }) + side;
   },
 });
