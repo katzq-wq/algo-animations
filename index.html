@@ -435,7 +435,7 @@ function arrRow({ label, vals, base = 0, hl = {}, ptr = {}, idxShow = true, empt
   });
   return h + "</div></div>";
 }
-const LEG = { cur: "var(--orange)", cmp: "var(--green)", done: "var(--done)", ok: "var(--cyan)", sel: "var(--pink)", vis: "var(--cyan-t);border-color:var(--pink)", S: "var(--cyan)", T: "var(--pink-t)" };
+const LEG = { idle: "#fff", cur: "var(--orange)", cmp: "var(--green)", done: "var(--done)", ok: "var(--cyan)", sel: "var(--pink)", vis: "var(--cyan-t);border-color:var(--pink)", S: "var(--cyan)", T: "var(--pink-t)" };
 const LEGE = { tree: ["var(--pen)", 0], flow: ["var(--pen)", 0], path: ["var(--mag)", 0], cur: ["var(--mag)", 0], match: ["var(--green-d)", 0], cand: ["var(--green-d)", 1], cut: ["var(--mag)", 1] };
 function legend(items) {
   return items.map(([k, t]) => k.startsWith("e:") ? `<span><i class="e ${LEGE[k.slice(2)][1] ? "dash" : ""}" style="border-color:${LEGE[k.slice(2)][0]}"></i>${t}</span>` : `<span><i style="background:${LEG[k]}"></i>${t}</span>`).join("");
@@ -1599,7 +1599,7 @@ algo({
   tag: "סורקים שכבה אחרי שכבה, בעזרת תור.", kw: "bfs סריקה לרוחב חיפוש תור גרף שכבות", src: "הרצאה 6, שקף 19",
   intro: `<b>מה זה?</b> דרך לעבור על כל הצמתים שאפשר להגיע אליהם מצומת ${c("s")}, <b>שכבה אחרי שכבה</b>: קודם ${c("s")} (שכבה 0), אחר כך כל השכנים שלו (שכבה 1), אחר כך השכנים שלהם (שכבה 2), וכן הלאה.<br><b>איך?</b> מחזיקים תור ${c("L")}: מי שנכנס ראשון יוצא ראשון. בכל צעד מוציאים את הצומת שבראש התור, ומכניסים לסוף התור את כל השכנים שלו שעוד לא ראינו.<br><b>בציור:</b> המספר הקטן מעל כל צומת הוא השכבה שלו. <b>זמן ריצה:</b> ${c("O(n + m)")}.`,
   code: ["BFS(G=(V,E), s)", "  Initially, all vertices in V are \"not visited\".", "  Create empty list L.", "  Add s to the tail of L, and mark s as \"visited\".", "  While L ≠ ∅ Do", "    Let i be the head of L, and remove i from L.", "    For each j ∈ N(i) do", "      If j \"not visited\" Then", "        Mark j as \"visited\"", "        Add j to the tail of L.", "      End If", "    End For.", "  End While."],
-  legend: [["cur","i – יצא עכשיו מהתור"],["cmp","j – שכן חדש שנכנס לתור"],["vis","מחכה בתור"],["done","סיימנו איתו"],["e:tree","קשת שבה גילינו צומת"]],
+  legend: [["idle","not visited"],["cmp","j: עכשיו סומן visited ונכנס ל-L"],["vis","visited, מחכה ב-L"],["cur","i: יצא מ-L, בודקים את שכניו"],["done","visited, כבר יצא מ-L"],["e:tree","הקשת שדרכה הגענו לצומת"]],
   opts: [ORD],
   inputs: gInputs(L6),
   parse(i) { return gParse(i, {}); },
@@ -1613,26 +1613,26 @@ algo({
       const sub = {}; for (const v in lay) sub[v] = "שכבה " + lay[v];
       S.push({ line, msg, g, pos, nc, ec, sub, L: L.slice(), order: order.slice(), vars: [["i", x.i || "–"], ["L", L.join(", ") || "∅"]] });
     };
-    snap([1, 2], `בהתחלה אף צומת לא "visited", והתור ${c("L")} ריק.`);
+    snap([1, 2], `בהתחלה כל הצמתים "not visited", והרשימה ${c("L")} ריקה.`);
     L.push(s); vis.add(s); lay[s] = 0;
-    snap(3, `מכניסים את ${c(s)} לתור ומסמנים אותו "visited". הוא שכבה 0.`);
+    snap(3, `מוסיפים את ${c(s)} ל-${c("L")} ומסמנים אותו "visited". הוא שכבה 0.`);
     while (L.length) {
       const i = L.shift(); order.push(i);
       const all = Nb(i), fresh = all.filter(j => !vis.has(j)), old = all.filter(j => vis.has(j));
-      snap(5, `מוציאים את ${c(i)} מראש התור. השכנים שלו: ${c(all.join(", ") || "אין")}.`, { i });
+      snap(5, `מוציאים את ${c(i)} מראש ${c("L")}. עכשיו בודקים את השכנים שלו: ${c(all.join(", ") || "אין")}.`, { i });
       fresh.forEach(j => { vis.add(j); L.push(j); tree[edgeKey(i, j)] = "tree"; lay[j] = lay[i] + 1; });
-      const oldTxt = old.length ? ` ${c(old.join(", "))} ${old.length > 1 ? "כבר סומנו" : "כבר סומן"} קודם, אז מדלגים ${old.length > 1 ? "עליהם" : "עליו"}.` : "";
-      if (fresh.length) snap([6, 7, 8, 9], `שכנים חדשים של ${c(i)}: ${c(fresh.join(", "))}. מסמנים אותם ומכניסים לסוף התור. הם בשכבה ${lay[i] + 1}.${oldTxt}`, { i, js: fresh });
-      else snap([6, 7], `לכל השכנים של ${c(i)} כבר הגענו קודם, אז אין מה להכניס לתור.`, { i });
+      const oldTxt = old.length ? ` ${c(old.join(", "))} כבר "visited", אז מדלגים ${old.length > 1 ? "עליהם" : "עליו"}.` : "";
+      if (fresh.length) snap([6, 7, 8, 9], `${fresh.length > 1 ? "השכנים" : "השכן"} ${c(fresh.join(", "))} ${fresh.length > 1 ? "הם" : "הוא"} "not visited", אז מסמנים ${fresh.length > 1 ? "אותם" : "אותו"} "visited" ומוסיפים לסוף ${c("L")}. ${fresh.length > 1 ? "הם" : "הוא"} בשכבה ${lay[i] + 1}.${oldTxt}`, { i, js: fresh });
+      else snap([6, 7], `כל השכנים של ${c(i)} כבר "visited", אז לא מוסיפים כלום ל-${c("L")}.`, { i });
       done.add(i);
     }
     const miss = g.nodes.filter(v => !vis.has(v));
-    snap(12, `התור ריק, והסריקה הסתיימה. <b>סדר היציאה מהתור: ${c(order.join(", "))}.</b> הקשתות הכחולות הן עץ ה-BFS, והשכבה של כל צומת היא המרחק שלו מ-${c(s)}.${miss.length ? ` לצמתים ${c(miss.join(", "))} לא הגענו, כי אין אליהם מסלול מ-${c(s)}.` : ""}`);
+    snap(12, `${c("L")} ריקה, והסריקה הסתיימה. <b>סדר היציאה מ-L: ${c(order.join(", "))}.</b> הקשתות המודגשות הן עץ ה-BFS, והשכבה של כל צומת היא המרחק שלו מ-${c(s)}.${miss.length ? ` הצמתים ${c(miss.join(", "))} נשארו "not visited", כי אין אליהם מסלול מ-${c(s)}.` : ""}`);
     return S;
   },
   render(st) {
-    return gDraw(st.g, st.pos, st.nc, st.ec, { sub: st.sub }) + qHtml(st.L, { title: "התור L", headLbl: "ראש התור<br><small>יוצאים מכאן</small>", tailLbl: "סוף התור<br><small>נכנסים מכאן</small>" }) +
-      `<div class="order">סדר היציאה מהתור: <b>${st.order.join(", ") || "–"}</b></div>`;
+    return gDraw(st.g, st.pos, st.nc, st.ec, { sub: st.sub }) + qHtml(st.L, { title: "הרשימה L: צמתים שסומנו visited ועוד לא בדקנו את השכנים שלהם", headLbl: "ראש התור<br><small>יוצאים מכאן</small>", tailLbl: "סוף התור<br><small>נכנסים מכאן</small>" }) +
+      `<div class="order">סדר היציאה מ-L: <b>${st.order.join(", ") || "–"}</b></div>`;
   },
 });
 
@@ -1642,7 +1642,7 @@ algo({
   tag: "הולכים כמה שיותר עמוק, וחוזרים אחורה כשנתקעים.", kw: "dfs סריקה לעומק חיפוש רקורסיה גרף מחסנית", src: "הרצאה 6, שקף 19",
   intro: `<b>מה זה?</b> דרך לעבור על כל הצמתים שאפשר להגיע אליהם, שבה הולכים <b>כמה שיותר עמוק</b> לפני שחוזרים: מהצומת הנוכחי קופצים מיד לשכן הראשון שעוד לא ראינו, ממנו לשכן שלו, וכן הלאה.<br><b>מה קורה כשנתקעים?</b> כשלצומת אין שכנים חדשים, הקריאה שלו מסתיימת וחוזרים לצומת שממנו הגענו אליו. את הדרך חזרה רואים ב"מחסנית" שמתחת לגרף.<br><b>בציור:</b> המספר הקטן מעל כל צומת הוא מתי הגענו אליו (1 = ראשון). <b>זמן ריצה:</b> ${c("O(n + m)")}.`,
   code: ["DFS(G=(V,E), i)", "  Mark i as \"visited\".", "  For each j ∈ N(i) do", "    If j \"not visited\" Then DFS(G,j).", "  End For"],
-  legend: [["cur","הצומת שאנחנו בו עכשיו"],["vis","בדרך (מחכה שנחזור אליו)"],["done","סיימנו איתו"],["e:path","הדרך מההתחלה עד כאן"],["e:tree","עץ DFS"]],
+  legend: [["idle","not visited"],["cur","visited, הקריאה שרצה עכשיו"],["vis","visited, מחכה שנחזור אליו"],["done","visited, הקריאה שלו הסתיימה"],["e:path","הדרך מההתחלה עד כאן"],["e:tree","עץ DFS"]],
   opts: [ORD],
   inputs: gInputs(L6),
   parse(i) { return gParse(i, {}); },
@@ -1670,11 +1670,11 @@ algo({
         dfs(j, i);
       }
       stack.pop(); done.add(i);
-      const skip = old.length && first ? ` (השכנים ${c(old.join(", "))} כבר סומנו)` : "";
+      const skip = old.length && first ? ` (${c(old.join(", "))} כבר "visited")` : "";
       snap(4, `ל-${c(i)} אין עוד שכנים חדשים${skip}, אז הקריאה ${c(`DFS(G, ${i})`)} מסתיימת${stack.length ? ` <b>וחוזרים אחורה ל-${c(stack[stack.length - 1])}</b>` : ""}.`, { back: i });
     })(s, null);
     const miss = g.nodes.filter(v => !vis.has(v));
-    snap(-1, `<b>הסריקה הסתיימה. סדר הגילוי: ${c(order.join(", "))}.</b> הקשתות הכחולות הן עץ ה-DFS.${miss.length ? ` לצמתים ${c(miss.join(", "))} לא הגענו, כי אין אליהם מסלול מ-${c(s)}.` : ""}`);
+    snap(-1, `<b>הסריקה הסתיימה. סדר הגילוי: ${c(order.join(", "))}.</b> הקשתות המודגשות הן עץ ה-DFS.${miss.length ? ` הצמתים ${c(miss.join(", "))} נשארו "not visited", כי אין אליהם מסלול מ-${c(s)}.` : ""}`);
     return S;
   },
   render(st) {
@@ -1807,7 +1807,7 @@ algo({
         } else snap(L.no, `${c(`dist(${i}) + d(${i},${j}) = ${nd} ≥ dist(${j}) = ${fmt(dist[j])}`)}. הדרך דרך ${i} לא טובה יותר, אז לא משנים.`, { i, j });
       }
     }
-    snap(L.end, `<b>סיימנו.</b> המרחקים הסופיים מופיעים מעל הצמתים. הקשתות בתכלת (father) יוצרות את עץ המסלולים הקצרים: כדי לשחזר מסלול, הולכים מהיעד אחורה לפי ${c("father")}.`);
+    snap(L.end, `<b>סיימנו.</b> המרחקים הסופיים מופיעים מעל הצמתים. הקשתות המודגשות (father) יוצרות את עץ המסלולים הקצרים: כדי לשחזר מסלול, הולכים מהיעד אחורה לפי ${c("father")}.`);
     return S;
   },
   render(st) {
@@ -1923,7 +1923,7 @@ algo({
         snap(5, `אין מסלול מ-${c("s")} ל-${c("t")} ב-${c("Gf")}, אז הזרימה מקסימלית. <b>ערך הזרימה: ${value}</b>, אחרי ${it - 1} סיבובי שיפור עם ${input.__opt.pm}.`, { R });
         const cutE = g.edges.filter(e => Sset.includes(e.u) && Tset.includes(e.v));
         const cutCap = cutE.reduce((a, e) => a + e.w, 0);
-        snap(10, `החתך: ${c("S = {" + sortIds(Sset).join(",") + "}")} הם הצמתים שאפשר להגיע אליהם מ-${s} ב-${c("Gf")}, ו-${c("T = {" + Tset.join(",") + "}")}. הקשתות מ-S ל-T (ורוד מקווקו): ${c(cutE.map(e => `${e.u}→${e.v}:${e.w}`).join(", "))}. סכום הקיבולות שלהן הוא ${cutCap}, <b>בדיוק כמו ערך הזרימה</b>. לכן זה חתך מינימלי.`, { R, cut: { S: Sset, edges: cutE.map(e => e.u + ">" + e.v) } });
+        snap(10, `החתך: ${c("S = {" + sortIds(Sset).join(",") + "}")} הם הצמתים שאפשר להגיע אליהם מ-${s} ב-${c("Gf")}, ו-${c("T = {" + Tset.join(",") + "}")}. הקשתות מ-S ל-T (הקו המקווקו): ${c(cutE.map(e => `${e.u}→${e.v}:${e.w}`).join(", "))}. סכום הקיבולות שלהן הוא ${cutCap}, <b>בדיוק כמו ערך הזרימה</b>. לכן זה חתך מינימלי.`, { R, cut: { S: Sset, edges: cutE.map(e => e.u + ">" + e.v) } });
         break;
       }
       const path = []; for (let v = t; v !== null; v = par[v]) path.unshift(v);
